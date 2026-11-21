@@ -132,27 +132,27 @@ export function seedInitialData(force = false) {
 	}
 
 	const garageCount = db.prepare('SELECT COUNT(*) as count FROM garages').get() as { count: number };
-	if (garageCount.count === 0) {
+	if (garageCount.count === 0 || force) {
 		const insertGarage = db.prepare(`
 			INSERT INTO garages (code, type, vehicle_name, license_plate, car_type, daily_price, electricity_price_kwh, battery_capacity_kwh, status, created_at)
 			VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
 		`);
 
-		// Garasi Sepeda & Sepeda Motor (Kode S...) - Tarif Sepeda Motor: 125rb per hari
-		insertGarage.run('S001', 'sepeda', 'Honda Vario 160 ABS', 'L 9876 XYZ', 'Sepeda Motor Matic', 125000, 0, 0, 'available', now);
-		insertGarage.run('S002', 'sepeda', 'Yamaha NMax 155 Connected', 'B 4567 NMX', 'Sepeda Motor Maxi', 125000, 0, 0, 'available', now);
-		insertGarage.run('S003', 'sepeda', 'Honda CRF 150L Trail', 'W 3456 CRF', 'Sepeda Motor Trail', 125000, 0, 0, 'available', now);
+		// Garasi Sepeda & Sepeda Motor (Kode S...) - Tarif penitipan motor: Rp 20.000 / hari (Bulanan Rp 500.000)
+		insertGarage.run('S001', 'sepeda', 'Slot Garasi Sepeda / Motor S001', null, 'Garasi Roda Dua', 20000, 0, 0, 'available', now);
+		insertGarage.run('S002', 'sepeda', 'Slot Garasi Sepeda / Motor S002', null, 'Garasi Roda Dua', 20000, 0, 0, 'available', now);
+		insertGarage.run('S003', 'sepeda', 'Slot Garasi Sepeda / Motor S003', null, 'Garasi Roda Dua', 20000, 0, 0, 'available', now);
 
-		// Garasi Mobil (Kode C...) - Tarif Mobil: 500rb s/d 1jt per hari
-		insertGarage.run('C001', 'mobil', 'Toyota Avanza 1.5G', 'L 1234 AB', 'MPV Keluarga', 500000, 0, 0, 'available', now);
-		insertGarage.run('C002', 'mobil', 'Mitsubishi Xpander Ultimate', 'N 9999 CD', 'MPV Keluarga', 650000, 0, 0, 'available', now);
-		insertGarage.run('C003', 'mobil', 'Honda HR-V SE 1.5 CVT', 'B 2345 HRV', 'Medium SUV', 750000, 0, 0, 'available', now);
-		insertGarage.run('C004', 'mobil', 'Toyota Camry 2.5 V Luxury', 'B 1000 CMR', 'Executive Sedan', 1000000, 0, 0, 'available', now);
+		// Garasi Mobil Bensin (Kode C...) - Tarif penitipan mobil: Rp 50.000 / hari (Bulanan Rp 1.250.000)
+		insertGarage.run('C001', 'mobil', 'Slot Garasi Mobil C001', null, 'Garasi Mobil Bensin', 50000, 0, 0, 'available', now);
+		insertGarage.run('C002', 'mobil', 'Slot Garasi Mobil C002', null, 'Garasi Mobil Bensin', 50000, 0, 0, 'available', now);
+		insertGarage.run('C003', 'mobil', 'Slot Garasi Mobil C003', null, 'Garasi Mobil Bensin', 50000, 0, 0, 'available', now);
+		insertGarage.run('C004', 'mobil', 'Slot Garasi Mobil C004', null, 'Garasi Mobil Bensin', 50000, 0, 0, 'available', now);
 
-		// Garasi Mobil Listrik (Kode E...) - Dilengkapi SPKLU AC Wallbox
-		insertGarage.run('E001', 'mobil_listrik', 'Hyundai Ioniq 5 Signature', 'B 5678 EV', 'Crossover EV', 750000, 2500, 58, 'available', now);
-		insertGarage.run('E002', 'mobil_listrik', 'BYD Seal Performance AWD', 'B 3456 BYD', 'Performance EV Sedan', 850000, 2500, 82, 'available', now);
-		insertGarage.run('E003', 'mobil_listrik', 'Kia EV9 GT-Line AWD', 'B 9999 KIA', 'Flagship Luxury EV', 1000000, 2500, 99.8, 'available', now);
+		// Garasi Mobil Listrik (Kode E...) - Tarif penitipan EV + SPKLU: Rp 75.000 / hari (Bulanan Rp 1.875.000) + Cas Rp 2.500 / kWh
+		insertGarage.run('E001', 'mobil_listrik', 'Slot Garasi EV + SPKLU E001', null, 'Garasi Listrik & SPKLU', 75000, 2500, 0, 'available', now);
+		insertGarage.run('E002', 'mobil_listrik', 'Slot Garasi EV + SPKLU E002', null, 'Garasi Listrik & SPKLU', 75000, 2500, 0, 'available', now);
+		insertGarage.run('E003', 'mobil_listrik', 'Slot Garasi EV + SPKLU E003', null, 'Garasi Listrik & SPKLU', 75000, 2500, 0, 'available', now);
 	}
 }
 

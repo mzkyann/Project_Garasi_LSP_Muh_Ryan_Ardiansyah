@@ -103,6 +103,10 @@ export const actions: Actions = {
 		}
 
 		const data = await request.formData();
+		const vehicleType = (data.get('vehicleType')?.toString() || 'mobil') as 'sepeda' | 'sepeda_motor' | 'mobil' | 'mobil_listrik';
+		const vehicleBrandModel = data.get('vehicleBrandModel')?.toString()?.trim() || '';
+		const licensePlate = data.get('licensePlate')?.toString()?.trim() || null;
+		const batteryCapacity = parseFloat(data.get('batteryCapacity')?.toString() || '0');
 		const rentalType = data.get('rentalType')?.toString() as 'harian' | 'bulanan';
 		const duration = parseInt(data.get('duration')?.toString() || '1', 10);
 		const garageId = parseInt(data.get('garageId')?.toString() || '0', 10);
@@ -112,15 +116,23 @@ export const actions: Actions = {
 		const today = new Date().toISOString().split('T')[0];
 		const startDate = inputStartDate && inputStartDate >= today ? inputStartDate : today;
 
-		// Validasi dasar
-		if (!rentalType || !garageId) {
-			return fail(400, { error: 'Silakan pilih unit kendaraan dan tentukan durasi sewa' });
+		// Validasi data kendaraan penyewa
+		if (!vehicleBrandModel) {
+			return fail(400, { error: 'Merek dan tipe kendaraan wajib diisi (contoh: Honda Vario 160, Toyota Avanza)' });
 		}
 
-		// Validasi Unit dari DB
+		if (vehicleType !== 'sepeda' && !licensePlate) {
+			return fail(400, { error: `Nomor plat kendaraan wajib diisi untuk ${vehicleType === 'sepeda_motor' ? 'sepeda motor' : vehicleType.replace('_', ' ')}` });
+		}
+
+		if (!rentalType || !garageId) {
+			return fail(400, { error: 'Silakan pilih slot garasi dan tentukan durasi sewa' });
+		}
+
+		// Validasi Unit Garasi dari DB
 		const rawGarage = db.prepare('SELECT * FROM garages WHERE id = ?').get(garageId) as any;
 		if (!rawGarage) {
-			return fail(404, { error: 'Unit kendaraan yang dipilih tidak ditemukan' });
+			return fail(404, { error: 'Slot garasi yang dipilih tidak ditemukan' });
 		}
 
 		// Hitung perkiraan tanggal selesai
@@ -131,7 +143,7 @@ export const actions: Actions = {
 			return fail(400, { error: err.message });
 		}
 
-		// Validasi overlap jadwal sewa aktif/pending: Apakah ada sewa yang bertabrakan dengan rentang [startDate, expectedEndDate]?
+		// Validasi overlap jadwal sewa aktif/pending: Apakah slot garasi sedang terpakai pada rentang [startDate, expectedEndDate]?
 		const overlappingRental = db.prepare(`
 			SELECT id, start_date, end_date FROM rentals 
 			WHERE garage_id = ? AND status IN ('pending', 'active')
@@ -144,27 +156,22 @@ export const actions: Actions = {
 			const readyDate = overlappingRental.end_date;
 
 			return fail(400, {
-				error: `Unit ${rawGarage.code} (${rawGarage.vehicle_name}) sedang dalam masa sewa pada periode tersebut (${overlappingRental.start_date} s/d ${overlappingRental.end_date}). Unit ini siap disewa kembali mulai tanggal ${readyDate}.`
+				error: `Slot garasi ${rawGarage.code} sedang penuh/terisi pada periode tersebut (${overlappingRental.start_date} s/d ${overlappingRental.end_date}). Slot ini siap disewa kembali mulai tanggal ${readyDate}.`
 			});
 		}
 
-		const vehicleBrandModel = rawGarage.vehicle_name || `${rawGarage.car_type || 'Kendaraan'} ${rawGarage.code}`;
-		const licensePlate = rawGarage.license_plate || null;
-		const vehicleType = rawGarage.type === 'sepeda' && licensePlate ? 'sepeda_motor' : rawGarage.type;
-		const batteryCapacity = rawGarage.battery_capacity_kwh || 0;
-
-		// Bentuk objek Domain OOP Vehicle
+		// Bentuk objek Domain OOP Vehicle sesuai input penyewa
 		let vehicleObj: Vehicle;
 		try {
 			if (vehicleType === 'sepeda') {
 				vehicleObj = new Bicycle(vehicleBrandModel);
 			} else if (vehicleType === 'sepeda_motor') {
-				vehicleObj = new Motorcycle(vehicleBrandModel, licensePlate || 'B 0000 XX');
+				vehicleObj = new Motorcycle(vehicleBrandModel, licensePlate!);
 			} else if (vehicleType === 'mobil') {
-				vehicleObj = new GasolineCar(vehicleBrandModel, licensePlate || 'B 0000 XX');
+				vehicleObj = new GasolineCar(vehicleBrandModel, licensePlate!);
 			} else if (vehicleType === 'mobil_listrik') {
 				const cap = batteryCapacity > 0 ? batteryCapacity : 58;
-				vehicleObj = new ElectricCar(vehicleBrandModel, licensePlate || 'B 0000 EV', cap);
+				vehicleObj = new ElectricCar(vehicleBrandModel, licensePlate!, cap);
 			} else {
 				throw new Error('Tipe kendaraan tidak valid');
 			}

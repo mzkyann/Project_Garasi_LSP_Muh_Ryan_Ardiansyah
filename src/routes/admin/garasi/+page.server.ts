@@ -171,10 +171,10 @@ export const actions: Actions = {
 
 		for (let i = 0; i < codes.length; i++) {
 			const code = codes[i];
-			const randomNum = 1000 + startSeq + i;
-			const samplePlate = type === 'sepeda' ? null : `B ${randomNum} ABC`;
-			const nameWithSeq = `${vehicleName} #${startSeq + i}`;
-			insertStmt.run(code, type, nameWithSeq, samplePlate, carType, dailyPrice, finalElectricityPrice, defaultBattery, now);
+			const nameWithSeq = vehicleName && vehicleName !== 'Unit Kendaraan' 
+				? `${vehicleName} #${startSeq + i}` 
+				: `Slot Garasi ${code}`;
+			insertStmt.run(code, type, nameWithSeq, null, carType, dailyPrice, finalElectricityPrice, defaultBattery, now);
 		}
 
 		return {

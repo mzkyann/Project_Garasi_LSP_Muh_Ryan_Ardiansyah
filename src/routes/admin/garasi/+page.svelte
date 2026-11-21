@@ -31,24 +31,24 @@
 		singleCode = `${prefix}${String(nextSeq).padStart(3, '0')}`;
 
 		if (singleType === 'sepeda') {
-			singleVehicleName = 'Honda Vario 160 ABS';
-			singleLicensePlate = 'B 4567 NMX';
-			singleCarType = 'Sepeda Motor Matic';
-			singleDailyPrice = 125000;
+			singleVehicleName = 'Slot Garasi Sepeda / Motor';
+			singleLicensePlate = '';
+			singleCarType = 'Garasi Roda Dua';
+			singleDailyPrice = 20000;
 			singleElectricityPrice = 0;
 			singleBatteryCapacity = 0;
 		} else if (singleType === 'mobil') {
-			singleVehicleName = 'Toyota Avanza 1.5G';
-			singleLicensePlate = 'B 1234 ABC';
-			singleCarType = 'MPV Keluarga';
-			singleDailyPrice = 650000;
+			singleVehicleName = 'Slot Garasi Mobil Bensin';
+			singleLicensePlate = '';
+			singleCarType = 'Garasi Roda Empat';
+			singleDailyPrice = 50000;
 			singleElectricityPrice = 0;
 			singleBatteryCapacity = 0;
 		} else {
-			singleVehicleName = 'Hyundai Ioniq 5 Signature';
-			singleLicensePlate = 'B 5678 EV';
-			singleCarType = 'Crossover EV';
-			singleDailyPrice = 750000;
+			singleVehicleName = 'Slot Garasi Mobil Listrik & SPKLU';
+			singleLicensePlate = '';
+			singleCarType = 'Garasi EV Wallbox';
+			singleDailyPrice = 75000;
 			singleElectricityPrice = 2500;
 			singleBatteryCapacity = 58;
 		}
@@ -56,11 +56,30 @@
 
 	// Form State Batch
 	let batchType = $state<'sepeda' | 'mobil' | 'mobil_listrik'>('mobil');
-	let batchVehicleName = $state('Toyota Avanza 1.5G');
-	let batchCarType = $state('MPV Keluarga');
-	let batchCount = $state<number>(3);
-	let batchDailyPrice = $state<number>(650000);
+	let batchVehicleName = $state('Slot Garasi Mobil Bensin');
+	let batchCarType = $state('Garasi Roda Empat');
+	let batchCount = $state<number>(5);
+	let batchDailyPrice = $state<number>(50000);
 	let batchElectricityPrice = $state<number>(2500);
+
+	$effect(() => {
+		if (batchType === 'sepeda') {
+			batchVehicleName = 'Slot Garasi Sepeda / Motor';
+			batchCarType = 'Garasi Roda Dua';
+			batchDailyPrice = 20000;
+			batchElectricityPrice = 0;
+		} else if (batchType === 'mobil') {
+			batchVehicleName = 'Slot Garasi Mobil Bensin';
+			batchCarType = 'Garasi Roda Empat';
+			batchDailyPrice = 50000;
+			batchElectricityPrice = 0;
+		} else {
+			batchVehicleName = 'Slot Garasi Mobil Listrik & SPKLU';
+			batchCarType = 'Garasi EV Wallbox';
+			batchDailyPrice = 75000;
+			batchElectricityPrice = 2500;
+		}
+	});
 
 	// Preview kode batch
 	let nextBatchPreview = $derived.by(() => {
@@ -152,9 +171,9 @@
 				<Icon name="shield" size={14} />
 				<span>Panel Administrasi</span>
 			</div>
-			<h1 class="text-xl font-extrabold text-[#383123] mt-1">Kelola Kendaraan & Unit Garasi</h1>
+			<h1 class="text-xl font-extrabold text-[#383123] mt-1">Kelola Slot Garasi & Pengaturan Kapasitas</h1>
 			<p class="text-xs text-[#6B5E45] mt-0.5 leading-relaxed">
-				Daftar armada mobil dan sepeda motor sewa beserta jadwal sewa aktif yang tercatat di sistem.
+				Pengaturan kuota kapasitas slot garasi (Sepeda S, Mobil C, Mobil Listrik E) beserta status keterisian dan tarif sewa.
 			</p>
 		</div>
 
@@ -166,7 +185,7 @@
 				class="px-4 py-2 text-xs font-bold rounded-lg border transition-all btn-interactive flex items-center gap-1.5 {activeTab === 'list' ? 'bg-[#71856A] text-white border-[#71856A] shadow-xs' : 'bg-[#FAF8F4] text-[#4F4532] border-[#DFD5C2] hover:bg-[#EFE8D6]'}"
 			>
 				<Icon name="building" size={14} />
-				<span>Daftar Armada ({totalUnits})</span>
+				<span>Daftar Slot Garasi ({totalUnits})</span>
 			</button>
 			<button
 				type="button"
@@ -174,7 +193,7 @@
 				class="px-4 py-2 text-xs font-bold rounded-lg border transition-all btn-interactive flex items-center gap-1.5 {activeTab === 'create-single' ? 'bg-[#71856A] text-white border-[#71856A] shadow-xs' : 'bg-[#FAF8F4] text-[#4F4532] border-[#DFD5C2] hover:bg-[#EFE8D6]'}"
 			>
 				<Icon name="plus" size={14} />
-				<span>+ Tambah Mobil / Motor</span>
+				<span>+ Tambah 1 Slot</span>
 			</button>
 			<button
 				type="button"
@@ -182,7 +201,7 @@
 				class="px-3.5 py-2 text-xs font-bold rounded-lg border transition-all btn-interactive flex items-center gap-1.5 {activeTab === 'create-batch' ? 'bg-[#71856A] text-white border-[#71856A] shadow-xs' : 'bg-[#FAF8F4] text-[#4F4532] border-[#DFD5C2] hover:bg-[#EFE8D6]'}"
 			>
 				<Icon name="filter" size={13} />
-				<span>Batch Unit Massal</span>
+				<span>Batch Garasi (Maks. 999)</span>
 			</button>
 		</div>
 	</div>
@@ -204,9 +223,9 @@
 	<div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
 		<div class="bg-white p-5 rounded-xl border border-[#DFD5C2] shadow-xs card-hover flex items-center justify-between">
 			<div>
-				<span class="text-xs font-bold text-[#877758] uppercase tracking-wider block">Total Armada</span>
-				<div class="text-2xl font-extrabold font-mono text-[#383123] mt-1">{totalUnits} Unit</div>
-				<span class="text-[11px] text-[#A08F6E] mt-0.5 block">Motor & Mobil terdaftar</span>
+				<span class="text-xs font-bold text-[#877758] uppercase tracking-wider block">Total Kapasitas Garasi</span>
+				<div class="text-2xl font-extrabold font-mono text-[#383123] mt-1">{totalUnits} Slot</div>
+				<span class="text-[11px] text-[#A08F6E] mt-0.5 block">Total kuota seluruh slot garasi</span>
 			</div>
 			<div class="w-10 h-10 rounded-xl bg-[#FAF8F4] border border-[#DFD5C2] text-[#4F4532] flex items-center justify-center">
 				<Icon name="building" size={20} />
@@ -215,9 +234,9 @@
 
 		<div class="bg-white p-5 rounded-xl border border-[#C2CCBC] shadow-xs card-hover flex items-center justify-between">
 			<div>
-				<span class="text-xs font-bold text-[#596A53] uppercase tracking-wider block">Unit Tersedia (Siap Sewa)</span>
-				<div class="text-2xl font-extrabold font-mono text-[#596A53] mt-1">{availableUnits} Unit</div>
-				<span class="text-[11px] text-[#71856A] mt-0.5 block">Bisa disewa langsung oleh penyewa</span>
+				<span class="text-xs font-bold text-[#596A53] uppercase tracking-wider block">Slot Tersedia (Kosong)</span>
+				<div class="text-2xl font-extrabold font-mono text-[#596A53] mt-1">{availableUnits} Slot</div>
+				<span class="text-[11px] text-[#71856A] mt-0.5 block">Siap disewa langsung oleh penyewa</span>
 			</div>
 			<div class="w-10 h-10 rounded-xl bg-[#EFF3ED] border border-[#DFE5DC] text-[#71856A] flex items-center justify-center">
 				<Icon name="check" size={20} />
@@ -226,9 +245,9 @@
 
 		<div class="bg-white p-5 rounded-xl border border-[#DAC99B] shadow-xs card-hover flex items-center justify-between">
 			<div>
-				<span class="text-xs font-bold text-[#8A7545] uppercase tracking-wider block">Unit Sedang Dirental</span>
-				<div class="text-2xl font-extrabold font-mono text-[#8A7545] mt-1">{rentedUnits} Unit</div>
-				<span class="text-[11px] text-[#B0975C] mt-0.5 block">Dalam masa sewa aktif saat ini</span>
+				<span class="text-xs font-bold text-[#8A7545] uppercase tracking-wider block">Slot Terisi (Used)</span>
+				<div class="text-2xl font-extrabold font-mono text-[#8A7545] mt-1">{rentedUnits} Slot</div>
+				<span class="text-[11px] text-[#B0975C] mt-0.5 block">Sedang dalam masa sewa aktif</span>
 			</div>
 			<div class="w-10 h-10 rounded-xl bg-[#FDFBF7] border border-[#DAC99B] text-[#B0975C] flex items-center justify-center">
 				<Icon name="clock" size={20} />
