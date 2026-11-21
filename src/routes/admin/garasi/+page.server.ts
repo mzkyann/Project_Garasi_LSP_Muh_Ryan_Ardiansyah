@@ -18,8 +18,9 @@ export const load: PageServerLoad = async ({ locals }) => {
 	const seqMobil = db.prepare("SELECT COUNT(*) as count FROM garages WHERE type = 'mobil'").get() as { count: number };
 	const seqListrik = db.prepare("SELECT COUNT(*) as count FROM garages WHERE type = 'mobil_listrik'").get() as { count: number };
 
-	// Ambil semua sewa aktif beserta data lengkap penyewa untuk keperluan Review Sewa (Read-Only)
-	const activeRentals = db.prepare(`
+	// 1. Ambil SEWA AKTIF HARI INI (start_date <= today AND end_date > today)
+	// Ini memastikan penyewa yang tampil sekarang adalah penyewa yang BENAR-BENAR SEDANG PARKIR HARI INI, bukan booking selanjutnya
+	const ongoingRentals = db.prepare(`
 		SELECT 
 			r.id as rental_id,
 			r.garage_id,
@@ -43,15 +44,54 @@ export const load: PageServerLoad = async ({ locals }) => {
 			u.email as tenant_email
 		FROM rentals r
 		JOIN users u ON r.user_id = u.id
-		WHERE r.status = 'active' AND r.end_date > ?
-		ORDER BY r.end_date DESC
+		WHERE r.status = 'active' 
+		  AND r.start_date <= ? 
+		  AND r.end_date > ?
+		ORDER BY r.start_date ASC
+	`).all(today, today) as any[];
+
+	const currentRentalMap = new Map<number, any>();
+	for (const r of ongoingRentals) {
+		if (!currentRentalMap.has(r.garage_id)) {
+			currentRentalMap.set(r.garage_id, r);
+		}
+	}
+
+	// 2. Ambil BOOKING HARI BERIKUTNYA / DI MASA DEPAN untuk setiap slot garasi
+	const futureBookings = db.prepare(`
+		SELECT 
+			r.id as rental_id,
+			r.garage_id,
+			r.user_id,
+			r.start_date,
+			r.end_date,
+			r.duration as duration_days,
+			r.rental_type,
+			r.vehicle_type,
+			r.vehicle_brand_model,
+			r.license_plate,
+			r.battery_capacity_kwh,
+			r.electricity_cost,
+			r.base_rental_cost,
+			r.total_cost,
+			r.payment_proof,
+			r.created_at as rental_created_at,
+			u.name as tenant_name,
+			u.nik as tenant_nik,
+			u.phone as tenant_phone,
+			u.email as tenant_email
+		FROM rentals r
+		JOIN users u ON r.user_id = u.id
+		WHERE r.status = 'active'
+		  AND r.start_date > ?
+		ORDER BY r.start_date ASC
 	`).all(today) as any[];
 
-	const rentalMap = new Map<number, any>();
-	for (const r of activeRentals) {
-		// Pasangkan rental aktif terakhir untuk setiap slot garasi
-		if (!rentalMap.has(r.garage_id)) {
-			rentalMap.set(r.garage_id, r);
+	const nextBookingMap = new Map<number, any>();
+	for (const b of futureBookings) {
+		// Pasangkan booking terdekat berikutnya
+		if (!nextBookingMap.has(b.garage_id)) {
+			nextBookingMap.set(b.garage_id, b);
 		}
 	}
 
@@ -68,13 +108,20 @@ export const load: PageServerLoad = async ({ locals }) => {
 	`).all(today) as any[];
 
 	const garages = rawGarages.map((g) => {
-		const rental = rentalMap.get(g.id) || null;
+		const currentRental = currentRentalMap.get(g.id) || null;
+		const nextBooking = nextBookingMap.get(g.id) || null;
+
 		return {
 			...g,
-			active_rental: rental,
-			active_start_date: rental ? rental.start_date : null,
-			active_end_date: rental ? rental.end_date : null,
-			active_tenant_name: rental ? rental.tenant_name : null
+			// Status sewa yang sedang aktif parkir hari ini
+			current_rental: currentRental,
+			active_rental: currentRental, // Untuk kompatibilitas modal review
+			isRented: Boolean(currentRental),
+			active_start_date: currentRental ? currentRental.start_date : null,
+			active_end_date: currentRental ? currentRental.end_date : null,
+			active_tenant_name: currentRental ? currentRental.tenant_name : null,
+			// Informasi siapa yang booking di hari berikutnya
+			next_booking: nextBooking
 		};
 	});
 
@@ -84,7 +131,8 @@ export const load: PageServerLoad = async ({ locals }) => {
 			sepeda: seqSepeda.count,
 			mobil: seqMobil.count,
 			mobil_listrik: seqListrik.count
-		}
+		},
+		today
 	};
 };
 
@@ -190,7 +238,6 @@ export const actions: Actions = {
 			// Cek jika ada collision dengan kode yang sudah ada
 			const existingCodes = db.prepare(`SELECT code FROM garages WHERE code IN (${codes.map(() => '?').join(',')})`).all(...codes) as { code: string }[];
 			if (existingCodes.length > 0) {
-				// Cari max seq yang ada
 				const allCodes = db.prepare('SELECT code FROM garages WHERE type = ?').all(type) as { code: string }[];
 				const maxNum = allCodes.reduce((max, c) => {
 					const num = parseInt(c.code.slice(1), 10);
@@ -238,7 +285,7 @@ export const actions: Actions = {
 		};
 	},
 
-	// UPDATE: Hanya Mengedit Tarif Garasi (Sesuai Permintaan: Hanya Tarif yang Boleh Diedit)
+	// UPDATE: Hanya Mengedit Tarif Garasi
 	updateGarage: async ({ request, locals }) => {
 		if (!locals.user || locals.user.role !== 'admin') {
 			return fail(403, { error: 'Hanya admin yang berhak memperbarui tarif garasi' });
@@ -264,7 +311,6 @@ export const actions: Actions = {
 
 		const finalElectricityPrice = garage.type === 'mobil_listrik' ? Math.max(0, electricityPrice) : 0;
 
-		// HANYA update tarif sewa harian dan tarif listrik (kode, tipe, nama, dan status tidak diubah)
 		db.prepare(`
 			UPDATE garages
 			SET daily_price = ?, electricity_price_kwh = ?
@@ -274,6 +320,62 @@ export const actions: Actions = {
 		return {
 			success: true,
 			message: `Tarif sewa Slot Garasi ${garage.code} berhasil diperbarui menjadi Rp ${dailyPrice.toLocaleString('id-ID')}/hari.`
+		};
+	},
+
+	// COMPLETE RENTAL: Admin Menyelesaikan Masa Sewa Aktif (Check-Out)
+	// Setelah diselesaikan, slot garasi otomatis kosong atau beralih ke penyewa berikutnya jika sudah waktunya
+	completeRental: async ({ request, locals }) => {
+		if (!locals.user || locals.user.role !== 'admin') {
+			return fail(403, { error: 'Akses ditolak: Hanya admin yang berhak menyelesaikan sewa garasi' });
+		}
+
+		const data = await request.formData();
+		const rentalId = parseInt(data.get('rentalId')?.toString() || '0', 10);
+
+		if (!rentalId) {
+			return fail(400, { error: 'ID sewa tidak valid' });
+		}
+
+		const rental = db.prepare(`
+			SELECT r.*, g.code as garage_code, u.name as tenant_name
+			FROM rentals r
+			JOIN garages g ON r.garage_id = g.id
+			JOIN users u ON r.user_id = u.id
+			WHERE r.id = ?
+		`).get(rentalId) as any;
+
+		if (!rental) {
+			return fail(404, { error: 'Data sewa garasi tidak ditemukan' });
+		}
+
+		const today = new Date().toISOString().split('T')[0];
+
+		// 1. Selesaikan sewa saat ini
+		db.prepare("UPDATE rentals SET status = 'completed' WHERE id = ?").run(rentalId);
+
+		// 2. Sinkronkan status garasi
+		syncGarageStatuses(today);
+
+		// 3. Cek apakah ada penyewa berikutnya yang sudah booking
+		const nextBooking = db.prepare(`
+			SELECT r.*, u.name as next_tenant_name
+			FROM rentals r
+			JOIN users u ON r.user_id = u.id
+			WHERE r.garage_id = ? 
+			  AND r.status = 'active' 
+			  AND r.start_date >= ?
+			ORDER BY r.start_date ASC
+			LIMIT 1
+		`).get(rental.garage_id, today) as any;
+
+		const nextInfo = nextBooking
+			? ` Slot garasi ${rental.garage_code} kini telah dijadwalkan beralih ke penyewa berikutnya: ${nextBooking.next_tenant_name} (${nextBooking.vehicle_brand_model}) mulai tanggal ${nextBooking.start_date}.`
+			: ` Slot garasi ${rental.garage_code} kini berstatus KOSONG & TERSEDIA untuk disewa kembali.`;
+
+		return {
+			success: true,
+			message: `Masa sewa untuk ${rental.tenant_name} (${rental.vehicle_brand_model} - ${rental.license_plate || 'Bebas Plat'}) berhasil diselesaikan oleh admin.${nextInfo}`
 		};
 	},
 
@@ -295,10 +397,10 @@ export const actions: Actions = {
 			return fail(404, { error: 'Slot garasi tidak ditemukan' });
 		}
 
-		// Cek apakah garasi sedang aktif dirental atau menunggu ACC
+		// Cek apakah garasi sedang aktif disewa atau menunggu ACC
 		const activeRental = db.prepare("SELECT COUNT(*) as count FROM rentals WHERE garage_id = ? AND status IN ('pending', 'active')").get(id) as { count: number };
 		if (activeRental.count > 0) {
-			return fail(400, { error: `Slot garasi ${garage.code} tidak dapat dihapus karena sedang disewa aktif atau memiliki pengajuan sewa yang sedang diproses.` });
+			return fail(400, { error: `Slot garasi ${garage.code} tidak dapat dihapus karena masih memiliki kontrak sewa aktif atau jadwal booking yang belum selesai.` });
 		}
 
 		db.prepare('DELETE FROM rentals WHERE garage_id = ?').run(id);

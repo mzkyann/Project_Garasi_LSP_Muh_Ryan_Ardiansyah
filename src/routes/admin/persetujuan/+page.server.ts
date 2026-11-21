@@ -167,7 +167,7 @@ export const actions: Actions = {
 
 		if (collision) {
 			return fail(400, {
-				error: `Tidak dapat di-ACC: Unit telah dipesan oleh rental lain pada rentang ${collision.start_date} s/d ${collision.end_date}.`
+				error: `Tidak dapat di-ACC: Slot garasi telah dibooking oleh penyewa lain pada rentang ${collision.start_date} s/d ${collision.end_date}.`
 			});
 		}
 

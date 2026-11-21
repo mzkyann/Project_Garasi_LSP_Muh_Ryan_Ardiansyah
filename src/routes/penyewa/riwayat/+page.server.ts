@@ -105,7 +105,7 @@ export const actions: Actions = {
 
 		if (collision) {
 			return fail(400, {
-				error: `Mobil ini telah dibooking oleh penyewa lain pada periode ${collision.start_date} s/d ${collision.end_date}, sehingga otomatis tidak dapat diperpanjang ke tanggal tersebut.`
+				error: `Slot garasi ini telah dibooking oleh penyewa lain pada periode ${collision.start_date} s/d ${collision.end_date}, sehingga otomatis tidak dapat diperpanjang ke tanggal tersebut.`
 			});
 		}
 

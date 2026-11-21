@@ -85,15 +85,32 @@
 	// Modal Review Sewa State (READ-ONLY)
 	let reviewRental = $state<any | null>(null);
 	let reviewGarage = $state<any | null>(null);
+	let isReviewingNextBooking = $state<boolean>(false);
 
-	function openReviewModal(g: any) {
+	function openReviewModal(g: any, isNext = false) {
 		reviewGarage = g;
-		reviewRental = g.active_rental || null;
+		isReviewingNextBooking = isNext;
+		reviewRental = isNext ? g.next_booking : (g.current_rental || g.next_booking);
 	}
 
 	function closeReviewModal() {
 		reviewRental = null;
 		reviewGarage = null;
+		isReviewingNextBooking = false;
+	}
+
+	// Modal Konfirmasi Selesaikan Sewa
+	let completeTarget = $state<any | null>(null);
+
+	function openCompleteModal(rental: any, garage: any) {
+		completeTarget = {
+			rental,
+			garage
+		};
+	}
+
+	function closeCompleteModal() {
+		completeTarget = null;
 	}
 
 	// Modal Delete State
@@ -107,6 +124,17 @@
 		deleteGarageTarget = null;
 	}
 
+	// Format jenis kendaraan agar tepat (motor tampil sebagai Sepeda Motor, bukan Mobil Listrik)
+	function getVehicleTypeLabel(type: string) {
+		if (!type) return '-';
+		const t = type.toLowerCase();
+		if (t === 'sepeda') return 'Sepeda (Gowes)';
+		if (t === 'sepeda_motor' || t === 'motor') return 'Sepeda Motor';
+		if (t === 'mobil') return 'Mobil Bensin';
+		if (t === 'mobil_listrik' || t === 'ev') return 'Mobil Listrik (EV)';
+		return type;
+	}
+
 	// Filtered list slot garasi
 	let filteredGarages = $derived.by(() => {
 		return data.garages.filter((g: any) => {
@@ -115,12 +143,14 @@
 				!q ||
 				g.code.toLowerCase().includes(q) ||
 				(g.car_type && g.car_type.toLowerCase().includes(q)) ||
-				(g.active_tenant_name && g.active_tenant_name.toLowerCase().includes(q)) ||
-				(g.active_rental?.vehicle_brand_model && g.active_rental.vehicle_brand_model.toLowerCase().includes(q)) ||
-				(g.active_rental?.license_plate && g.active_rental.license_plate.toLowerCase().includes(q));
+				(g.current_rental?.tenant_name && g.current_rental.tenant_name.toLowerCase().includes(q)) ||
+				(g.current_rental?.vehicle_brand_model && g.current_rental.vehicle_brand_model.toLowerCase().includes(q)) ||
+				(g.current_rental?.license_plate && g.current_rental.license_plate.toLowerCase().includes(q)) ||
+				(g.next_booking?.tenant_name && g.next_booking.tenant_name.toLowerCase().includes(q)) ||
+				(g.next_booking?.vehicle_brand_model && g.next_booking.vehicle_brand_model.toLowerCase().includes(q));
 
 			const matchesType = filterType === 'all' || g.type === filterType;
-			const isRented = g.status === 'used' || Boolean(g.active_end_date);
+			const isRented = Boolean(g.current_rental);
 			const matchesStatus =
 				filterStatus === 'all' ||
 				(filterStatus === 'available' && !isRented) ||
@@ -132,16 +162,24 @@
 
 	// Summary KPI Kapasitas Garasi
 	let totalUnits = $derived(data.garages.length);
-	let rentedUnits = $derived(data.garages.filter((g: any) => g.status === 'used' || Boolean(g.active_end_date)).length);
+	let rentedUnits = $derived(data.garages.filter((g: any) => Boolean(g.current_rental)).length);
 	let availableUnits = $derived(Math.max(0, totalUnits - rentedUnits));
 
 	function formatRupiah(num: number) {
 		return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(num);
 	}
+
+	function formatDateIndo(dateStr: string) {
+		if (!dateStr) return '-';
+		const parts = dateStr.split('T')[0].split('-');
+		if (parts.length !== 3) return dateStr;
+		const months = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
+		return `${parseInt(parts[2], 10)} ${months[parseInt(parts[1], 10) - 1]} ${parts[0]}`;
+	}
 </script>
 
 <svelte:head>
-	<title>Kelola Kapasitas Slot Garasi - Admin SIM-GARASI</title>
+	<title>Kelola Kapasitas Slot Garasi - Admin GARTA Takalar</title>
 </svelte:head>
 
 <div class="space-y-6 py-2">
@@ -150,11 +188,11 @@
 		<div>
 			<div class="flex items-center gap-2 text-xs font-bold text-[#71856A] uppercase tracking-wider">
 				<Icon name="shield" size={14} />
-				<span>Panel Administrasi Garasi</span>
+				<span>Panel Administrasi GARTA Takalar</span>
 			</div>
 			<h1 class="text-xl font-extrabold text-[#383123] mt-1">Kelola Slot Garasi & Pengaturan Kapasitas</h1>
 			<p class="text-xs text-[#6B5E45] mt-0.5 leading-relaxed">
-				Kelola kapasitas slot garasi (Sepeda S, Mobil C, Mobil Listrik E), atur tarif penitipan kendaraan, dan review data sewa aktif secara langsung.
+				Kelola kapasitas slot tempat parkir/garasi, atur tarif sewa, pantau penyewa yang sedang parkir hari ini, cek booking berikutnya, serta selesaikan masa sewa kapan saja.
 			</p>
 		</div>
 
@@ -190,23 +228,23 @@
 	<!-- Alert Messages -->
 	{#if form?.success}
 		<div class="p-4 bg-[#EFF3ED] border border-[#C2CCBC] text-[#2E382A] rounded-xl text-xs font-semibold flex items-center gap-2.5 shadow-xs">
-			<Icon name="check" size={16} class="text-[#71856A]" />
+			<Icon name="check" size={16} class="text-[#71856A] shrink-0" />
 			<span>{form.message}</span>
 		</div>
 	{:else if form?.error}
 		<div class="p-4 bg-rose-50 border border-rose-200 text-rose-800 rounded-xl text-xs font-semibold flex items-center gap-2.5 shadow-xs">
-			<Icon name="alert" size={16} class="text-rose-600" />
+			<Icon name="alert" size={16} class="text-rose-600 shrink-0" />
 			<span>{form.error}</span>
 		</div>
 	{/if}
 
-	<!-- 3 KPI STAT CARDS (Clear Overview for Admin) -->
+	<!-- 3 KPI STAT CARDS -->
 	<div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
 		<div class="bg-white p-5 rounded-xl border border-[#DFD5C2] shadow-xs card-hover flex items-center justify-between">
 			<div>
 				<span class="text-xs font-bold text-[#877758] uppercase tracking-wider block">Total Kapasitas Garasi</span>
 				<div class="text-2xl font-extrabold font-mono text-[#383123] mt-1">{totalUnits} Slot</div>
-				<span class="text-[11px] text-[#A08F6E] mt-0.5 block">Total daya tampung seluruh garasi</span>
+				<span class="text-[11px] text-[#A08F6E] mt-0.5 block">Total daya tampung seluruh garasi Takalar</span>
 			</div>
 			<div class="w-10 h-10 rounded-xl bg-[#FAF8F4] border border-[#DFD5C2] text-[#4F4532] flex items-center justify-center">
 				<Icon name="building" size={20} />
@@ -215,9 +253,9 @@
 
 		<div class="bg-white p-5 rounded-xl border border-[#C2CCBC] shadow-xs card-hover flex items-center justify-between">
 			<div>
-				<span class="text-xs font-bold text-[#596A53] uppercase tracking-wider block">Slot Kosong (Tersedia)</span>
+				<span class="text-xs font-bold text-[#596A53] uppercase tracking-wider block">Slot Kosong (Tersedia Hari Ini)</span>
 				<div class="text-2xl font-extrabold font-mono text-[#596A53] mt-1">{availableUnits} Slot</div>
-				<span class="text-[11px] text-[#71856A] mt-0.5 block">Siap disewa untuk penitipan kendaraan</span>
+				<span class="text-[11px] text-[#71856A] mt-0.5 block">Siap digunakan untuk penitipan kendaraan</span>
 			</div>
 			<div class="w-10 h-10 rounded-xl bg-[#EFF3ED] border border-[#DFE5DC] text-[#71856A] flex items-center justify-center">
 				<Icon name="check" size={20} />
@@ -226,9 +264,9 @@
 
 		<div class="bg-white p-5 rounded-xl border border-[#DAC99B] shadow-xs card-hover flex items-center justify-between">
 			<div>
-				<span class="text-xs font-bold text-[#8A7545] uppercase tracking-wider block">Slot Terisi (Sedang Disewa)</span>
+				<span class="text-xs font-bold text-[#8A7545] uppercase tracking-wider block">Slot Sedang Terisi Parkir</span>
 				<div class="text-2xl font-extrabold font-mono text-[#8A7545] mt-1">{rentedUnits} Slot</div>
-				<span class="text-[11px] text-[#B0975C] mt-0.5 block">Sedang dipakai oleh penyewa aktif</span>
+				<span class="text-[11px] text-[#B0975C] mt-0.5 block">Sedang dipakai oleh penyewa aktif hari ini</span>
 			</div>
 			<div class="w-10 h-10 rounded-xl bg-[#FDFBF7] border border-[#DAC99B] text-[#B0975C] flex items-center justify-center">
 				<Icon name="clock" size={20} />
@@ -236,7 +274,7 @@
 		</div>
 	</div>
 
-	<!-- TAB 1: LIST DAFTAR SLOT GARASI & REVIEW SEWA -->
+	<!-- TAB 1: LIST DAFTAR SLOT GARASI, REVIEW SEWA, SELESAIKAN SEWA -->
 	{#if activeTab === 'list'}
 		<div class="space-y-4">
 			<!-- Search & Filter Bar -->
@@ -245,7 +283,7 @@
 					<input
 						type="text"
 						bind:value={searchQuery}
-						placeholder="Cari berdasarkan kode slot (S001, C001, E001), penyewa, plat nomor, atau model kendaraan..."
+						placeholder="Cari kode slot (S001, C001, E001), penyewa saat ini, booking berikutnya, plat nomor..."
 						class="w-full px-3.5 py-2 text-xs border border-[#DFD5C2] rounded-lg input-focus bg-[#FCFAF4] font-medium"
 					/>
 				</div>
@@ -281,7 +319,7 @@
 				</div>
 			</div>
 
-			<!-- Main Table: Slot Garasi & Tombol Review Sewa Read-Only -->
+			<!-- Main Table -->
 			<div class="bg-white rounded-xl border border-[#DFD5C2] shadow-xs overflow-hidden card-hover">
 				<div class="overflow-x-auto">
 					<table class="w-full text-left text-xs">
@@ -292,7 +330,7 @@
 								<th class="py-3.5 px-4 text-right">Tarif Harian</th>
 								<th class="py-3.5 px-4 text-right">Tarif Bulanan</th>
 								<th class="py-3.5 px-4">Status & Keterisian Slot</th>
-								<th class="py-3.5 px-4 text-center">Tindakan</th>
+								<th class="py-3.5 px-4 text-center">Tindakan Admin</th>
 							</tr>
 						</thead>
 						<tbody class="divide-y divide-[#F4EFE7]">
@@ -304,7 +342,9 @@
 								</tr>
 							{:else}
 								{#each filteredGarages as garage (garage.id)}
-									{@const isRented = garage.status === 'used' || Boolean(garage.active_end_date)}
+									{@const currentRental = garage.current_rental}
+									{@const nextBooking = garage.next_booking}
+									{@const isRented = Boolean(currentRental)}
 									<tr class="hover:bg-[#FAF8F4] transition">
 										<!-- Kode Slot & Kategori -->
 										<td class="py-3 px-4">
@@ -346,53 +386,111 @@
 											{formatRupiah(garage.daily_price * 25)}
 										</td>
 
-										<!-- Status & Jadwal Sewa Aktif -->
+										<!-- Status & Keterisian Slot: Penyewa Sekarang & Booking Selanjutnya -->
 										<td class="py-3 px-4">
-											{#if isRented}
-												<div class="space-y-1">
-													<span class="inline-block px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold bg-rose-50 text-rose-700 border border-rose-200">
-														⛔ Sedang Disewa
-													</span>
-													{#if garage.active_rental}
-														<div class="text-[11px] text-[#383123] font-semibold">
-															{garage.active_rental.vehicle_brand_model}
-															<span class="font-mono text-[#71856A] ml-1">({garage.active_rental.license_plate || 'Bebas Plat'})</span>
-														</div>
-														<div class="text-[10px] text-[#6B5E45] font-mono">
-															Penyewa: <strong>{garage.active_rental.tenant_name}</strong> (s/d {garage.active_end_date})
-														</div>
-													{:else if garage.active_end_date}
-														<div class="text-[10px] text-rose-700 font-mono">
-															Selesai: {garage.active_end_date}
+											{#if isRented && currentRental}
+												<div class="space-y-1.5">
+													<!-- Badge Status Parkir Aktif Hari Ini -->
+													<div class="flex items-center gap-1.5">
+														<span class="inline-block px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold bg-rose-50 text-rose-700 border border-rose-200">
+															⛔ Sedang Digunakan (Aktif)
+														</span>
+													</div>
+													
+													<!-- Data Penyewa Hari Ini (Akurat) -->
+													<div class="text-[11px] text-[#383123] font-bold">
+														{currentRental.vehicle_brand_model}
+														<span class="font-mono text-[#71856A] ml-1">({currentRental.license_plate || 'Bebas Plat'})</span>
+														<span class="text-[10px] text-[#877758] block font-normal mt-0.2">
+															Jenis: <strong class="text-[#383123]">{getVehicleTypeLabel(currentRental.vehicle_type)}</strong>
+														</span>
+													</div>
+													<div class="text-[10px] text-[#6B5E45]">
+														Penyewa Sekarang: <strong class="text-[#383123]">{currentRental.tenant_name}</strong>
+														<span class="font-mono text-rose-700 block">s/d {formatDateIndo(currentRental.end_date)}</span>
+													</div>
+
+													<!-- Info Booking Selanjutnya jika ada -->
+													{#if nextBooking}
+														<div class="p-2 bg-[#FDFBF7] border border-[#DAC99B] rounded-lg text-[10px] text-[#8A7545] space-y-0.5 mt-1">
+															<div class="font-bold flex items-center gap-1">
+																<Icon name="clock" size={11} />
+																<span>Booking Selanjutnya:</span>
+															</div>
+															<div>
+																<strong>{nextBooking.tenant_name}</strong> ({nextBooking.vehicle_brand_model})
+															</div>
+															<div class="font-mono text-[#877758]">
+																Mulai: {formatDateIndo(nextBooking.start_date)} s/d {formatDateIndo(nextBooking.end_date)}
+															</div>
 														</div>
 													{/if}
 												</div>
 											{:else}
-												<div>
+												<div class="space-y-1.5">
+													<!-- Badge Status Kosong / Siap Pakai -->
 													<span class="inline-block px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold bg-[#EFF3ED] text-[#596A53] border border-[#DFE5DC]">
 														● Tersedia (Siap Sewa)
 													</span>
+
+													<!-- Info Booking Masa Depan jika ada -->
+													{#if nextBooking}
+														<div class="p-2 bg-[#FAF8F4] border border-[#DFD5C2] rounded-lg text-[10px] text-[#6B5E45] space-y-0.5">
+															<div class="font-bold text-[#877758] flex items-center gap-1">
+																<Icon name="calendar" size={11} />
+																<span>Jadwal Booking Berikutnya:</span>
+															</div>
+															<div>
+																<strong>{nextBooking.tenant_name}</strong> ({nextBooking.vehicle_brand_model})
+															</div>
+															<div class="font-mono text-[#71856A] font-semibold">
+																Mulai: {formatDateIndo(nextBooking.start_date)} s/d {formatDateIndo(nextBooking.end_date)}
+															</div>
+														</div>
+													{/if}
 												</div>
 											{/if}
 										</td>
 
-										<!-- Tindakan: Review Sewa (Read Only) & Edit Tarif -->
+										<!-- Tindakan Admin -->
 										<td class="py-3 px-4 text-center">
-											<div class="inline-flex items-center gap-1.5">
-												{#if isRented && garage.active_rental}
-													<!-- Tombol Review Sewa (Read Only) -->
+											<div class="inline-flex flex-col sm:flex-row items-center gap-1.5">
+												{#if isRented && currentRental}
+													<!-- Tombol Review Penyewa Sekarang (Read-Only) -->
 													<button
 														type="button"
-														onclick={() => openReviewModal(garage)}
+														onclick={() => openReviewModal(garage, false)}
 														class="px-2.5 py-1 bg-[#383123] hover:bg-[#4F4532] text-white rounded-md font-bold text-[11px] transition btn-interactive flex items-center gap-1 shadow-xs"
-														title="Review Detail Penyewa & Kendaraan (Read Only)"
+														title="Review Detail Penyewa Hari Ini (Read-Only)"
 													>
 														<Icon name="search" size={11} />
 														<span>Review</span>
 													</button>
+
+													<!-- Tombol Selesaikan Sewa (Check-out oleh Admin) -->
+													<button
+														type="button"
+														onclick={() => openCompleteModal(currentRental, garage)}
+														class="px-2.5 py-1 bg-amber-600 hover:bg-amber-700 text-white rounded-md font-bold text-[11px] transition btn-interactive flex items-center gap-1 shadow-xs"
+														title="Selesaikan masa sewa penyewa sekarang (Check-out)"
+													>
+														<Icon name="check" size={11} />
+														<span>Selesaikan</span>
+													</button>
+												{:else if nextBooking}
+													<!-- Tombol Review Booking Berikutnya -->
+													<button
+														type="button"
+														onclick={() => openReviewModal(garage, true)}
+														class="px-2 py-1 bg-[#FAF8F4] hover:bg-[#EFE8D6] text-[#4F4532] rounded-md font-bold text-[11px] border border-[#DFD5C2] transition flex items-center gap-1"
+														title="Review Detail Booking Selanjutnya"
+													>
+														<Icon name="calendar" size={11} />
+														<span>Review Booking</span>
+													</button>
 												{/if}
 
-												<!-- Tombol Edit Hanya Tarif Garasi -->
+												<!-- Tombol Edit Tarif Slot Garasi -->
 												<button
 													type="button"
 													onclick={() => openEditModal(garage)}
@@ -402,8 +500,8 @@
 													<span>Edit Tarif</span>
 												</button>
 
-												<!-- Tombol Hapus (Hanya jika slot kosong) -->
-												{#if !isRented}
+												<!-- Tombol Hapus (Hanya jika tidak ada sewa/booking sama sekali) -->
+												{#if !isRented && !nextBooking}
 													<button
 														type="button"
 														onclick={() => openDeleteModal(garage)}
@@ -425,7 +523,7 @@
 		</div>
 	{/if}
 
-	<!-- TAB 2: TAMBAH 1 SLOT GARASI (KODE AUTO GENERATE & HANYA TAMBAH SLOT) -->
+	<!-- TAB 2: TAMBAH 1 SLOT GARASI -->
 	{#if activeTab === 'create-single'}
 		<div class="bg-white rounded-xl border border-[#DFD5C2] shadow-xs p-6 space-y-6 card-hover">
 			<div class="border-b border-[#F4EFE7] pb-3 flex items-center justify-between">
@@ -448,7 +546,6 @@
 			</div>
 
 			<form method="POST" action="?/createGarage" class="space-y-5">
-				<!-- 1. Pilih Kategori Slot Garasi -->
 				<div>
 					<span class="block text-xs font-bold text-[#4F4532] mb-2">
 						Pilih Kategori Slot Garasi Yang Ingin Ditambahkan <span class="text-rose-600">*</span>
@@ -493,7 +590,6 @@
 					<input type="hidden" name="type" value={singleType} />
 				</div>
 
-				<!-- 2. Form Input Slot: Kode Readonly & Tarif -->
 				<div class="grid grid-cols-1 md:grid-cols-2 gap-5 p-4 bg-[#FAF8F4] rounded-xl border border-[#DFD5C2]">
 					<div>
 						<label for="singleCode" class="block text-xs font-bold text-[#4F4532] mb-1">
@@ -511,9 +607,6 @@
 								Auto Locked
 							</span>
 						</div>
-						<p class="text-[10px] text-[#877758] mt-1">
-							* Kode unit digenerate otomatis berurutan secara unik dan tidak dapat diubah manual.
-						</p>
 					</div>
 
 					<div>
@@ -550,9 +643,6 @@
 								required
 								class="w-full max-w-xs px-3 py-2 text-xs border border-[#71856A] rounded-lg bg-white font-mono font-bold"
 							/>
-							<p class="text-[10px] text-[#596A53] mt-1">
-								Tarif cas baterai mobil listrik yang akan ditagihkan kepada penyewa sesuai kapasitas baterai kendaraannya.
-							</p>
 						</div>
 					{/if}
 				</div>
@@ -577,7 +667,7 @@
 		</div>
 	{/if}
 
-	<!-- TAB 3: BATCH GENERATION (TAMBAH BANYAK SLOT GARASI 1 S/D 999) -->
+	<!-- TAB 3: BATCH GENERATION -->
 	{#if activeTab === 'create-batch'}
 		<div class="bg-white rounded-xl border border-[#DFD5C2] shadow-xs p-6 space-y-5 card-hover">
 			<div class="border-b border-[#F4EFE7] pb-3 flex items-center justify-between">
@@ -714,7 +804,6 @@
 			<form method="POST" action="?/updateGarage" class="space-y-4">
 				<input type="hidden" name="id" value={editGarage.id} />
 
-				<!-- Ringkasan Info Slot (Read-Only) -->
 				<div class="p-3 bg-[#FAF8F4] rounded-xl border border-[#DFD5C2] flex items-center justify-between text-xs">
 					<div>
 						<span class="text-[#877758] block text-[10px] uppercase font-bold">Kode Slot</span>
@@ -726,7 +815,6 @@
 					</div>
 				</div>
 
-				<!-- Input Tarif Harian -->
 				<div>
 					<label for="editDailyPrice" class="block text-xs font-bold text-[#4F4532] mb-1">
 						Tarif Sewa Harian (Rp) <span class="text-rose-600">*</span>
@@ -746,7 +834,6 @@
 					</span>
 				</div>
 
-				<!-- Input Tarif Listrik Jika EV -->
 				{#if editGarage.type === 'mobil_listrik'}
 					<div class="bg-[#EFF3ED] border border-[#C2CCBC] p-3 rounded-xl">
 						<label for="editElectricityPrice" class="block text-xs font-bold text-[#2E382A] mb-1">
@@ -786,6 +873,79 @@
 	</div>
 {/if}
 
+<!-- ================= MODAL SELESAIKAN SEWA (CHECK-OUT ADMIN) ================= -->
+{#if completeTarget}
+	<div class="fixed inset-0 z-50 bg-[#252016]/50 backdrop-blur-xs flex items-center justify-center p-4">
+		<div class="bg-white rounded-2xl border border-amber-300 max-w-md w-full p-6 space-y-4 shadow-2xl animate-in fade-in zoom-in-95">
+			<div class="flex items-center gap-3">
+				<div class="w-10 h-10 rounded-full bg-amber-50 text-amber-700 flex items-center justify-center shrink-0 border border-amber-200">
+					<Icon name="check" size={20} />
+				</div>
+				<div>
+					<h3 class="text-sm font-extrabold text-[#383123]">Konfirmasi Selesaikan Sewa Garasi</h3>
+					<p class="text-xs text-[#6B5E45]">Apakah Anda ingin menyelesaikan masa sewa slot garasi ini sekarang?</p>
+				</div>
+			</div>
+
+			<div class="p-3.5 bg-[#FAF8F4] rounded-xl border border-[#DFD5C2] space-y-1.5 text-xs">
+				<div class="flex justify-between font-mono">
+					<span class="text-[#877758]">Kode Slot:</span>
+					<span class="font-bold text-[#383123]">{completeTarget.garage.code}</span>
+				</div>
+				<div class="flex justify-between">
+					<span class="text-[#877758]">Penyewa:</span>
+					<span class="font-extrabold text-[#383123]">{completeTarget.rental.tenant_name}</span>
+				</div>
+				<div class="flex justify-between">
+					<span class="text-[#877758]">Kendaraan:</span>
+					<span class="font-semibold text-[#71856A]">{completeTarget.rental.vehicle_brand_model} ({completeTarget.rental.license_plate || 'Bebas Plat'})</span>
+				</div>
+				<div class="flex justify-between font-mono">
+					<span class="text-[#877758]">Periode Selesai:</span>
+					<span class="font-bold text-rose-700">{formatDateIndo(completeTarget.rental.end_date)}</span>
+				</div>
+			</div>
+
+			{#if completeTarget.garage.next_booking}
+				<div class="p-3 bg-[#EFF3ED] border border-[#C2CCBC] text-[#2E382A] rounded-lg text-xs space-y-1">
+					<div class="font-bold flex items-center gap-1 text-[#54674E]">
+						<Icon name="calendar" size={13} />
+						<span>Antrean Booking Berikutnya Terdeteksi:</span>
+					</div>
+					<div>
+						Penyewa berikutnya: <strong>{completeTarget.garage.next_booking.tenant_name}</strong> ({completeTarget.garage.next_booking.vehicle_brand_model})
+					</div>
+					<div class="text-[11px] text-[#6B5E45]">
+						Mulai tanggal {formatDateIndo(completeTarget.garage.next_booking.start_date)}. Setelah Anda selesaikan, slot ini siap untuk penyewa tersebut.
+					</div>
+				</div>
+			{:else}
+				<p class="text-[11px] text-[#6B5E45] italic">
+					* Setelah diselesaikan, slot garasi akan langsung berstatus kosong (tersedia) untuk disewa kembali oleh customer lain.
+				</p>
+			{/if}
+
+			<form method="POST" action="?/completeRental" class="pt-2 flex justify-end gap-2.5">
+				<input type="hidden" name="rentalId" value={completeTarget.rental.rental_id} />
+				<button
+					type="button"
+					onclick={closeCompleteModal}
+					class="px-4 py-2 bg-[#FAF8F4] hover:bg-[#EFE8D6] text-[#4F4532] font-bold rounded-lg text-xs border border-[#DFD5C2]"
+				>
+					Batal
+				</button>
+				<button
+					type="submit"
+					class="px-5 py-2 bg-amber-600 hover:bg-amber-700 text-white font-bold rounded-lg text-xs transition-all shadow-xs flex items-center gap-1.5 btn-interactive"
+				>
+					<Icon name="check" size={14} />
+					<span>Ya, Selesaikan Sewa</span>
+				</button>
+			</form>
+		</div>
+	</div>
+{/if}
+
 <!-- ================= MODAL REVIEW SEWA (READ-ONLY) ================= -->
 {#if reviewRental && reviewGarage}
 	<div class="fixed inset-0 z-50 bg-[#252016]/50 backdrop-blur-xs flex items-center justify-center p-4">
@@ -797,11 +957,19 @@
 						<span class="px-2 py-0.5 rounded text-[10px] font-mono font-extrabold bg-[#383123] text-white">
 							{reviewGarage.code}
 						</span>
-						<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-rose-50 text-rose-700 border border-rose-200">
-							🔒 Review Sewa Aktif (Read-Only)
-						</span>
+						{#if isReviewingNextBooking}
+							<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-amber-50 text-amber-800 border border-amber-300">
+								📅 Jadwal Booking Selanjutnya
+							</span>
+						{:else}
+							<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-rose-50 text-rose-700 border border-rose-200">
+								🔒 Review Penyewa Sedang Parkir (Read-Only)
+							</span>
+						{/if}
 					</div>
-					<h3 class="text-base font-extrabold text-[#383123] mt-1">Detail Kontrak Sewa Slot Garasi</h3>
+					<h3 class="text-base font-extrabold text-[#383123] mt-1">
+						{isReviewingNextBooking ? 'Detail Antrean Booking Berikutnya' : 'Detail Kontrak Sewa Slot Garasi'}
+					</h3>
 					<p class="text-[11px] text-[#6B5E45]">
 						Informasi lengkap identitas penyewa, kendaraan yang dititipkan, serta rincian pembayaran.
 					</p>
@@ -841,7 +1009,7 @@
 				</div>
 			</div>
 
-			<!-- 2. DATA KENDARAAN PENYEWA -->
+			<!-- 2. DATA KENDARAAN PENYEWA (PERBAIKAN TIPE KENDARAAN MOTOR) -->
 			<div class="bg-white border border-[#DFD5C2] rounded-xl p-4 space-y-2.5 shadow-xs">
 				<div class="flex items-center gap-2 text-xs font-bold text-[#71856A] uppercase tracking-wider">
 					<Icon name="shield" size={14} />
@@ -851,7 +1019,7 @@
 					<div>
 						<span class="text-[#877758] text-[10px] block">Jenis Kendaraan</span>
 						<span class="font-bold text-[#383123] uppercase">
-							{reviewRental.vehicle_type === 'sepeda' ? 'Sepeda' : reviewRental.vehicle_type === 'motor' ? 'Sepeda Motor' : reviewRental.vehicle_type === 'mobil' ? 'Mobil Bensin' : 'Mobil Listrik (EV)'}
+							{getVehicleTypeLabel(reviewRental.vehicle_type)}
 						</span>
 					</div>
 					<div>
@@ -882,11 +1050,11 @@
 				<div class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
 					<div>
 						<span class="text-[#596A53] text-[10px] block">Tanggal Mulai Sewa</span>
-						<span class="font-mono font-bold text-[#2E382A]">{reviewRental.start_date}</span>
+						<span class="font-mono font-bold text-[#2E382A]">{formatDateIndo(reviewRental.start_date)}</span>
 					</div>
 					<div>
 						<span class="text-[#596A53] text-[10px] block">Tanggal Selesai (Batas Akhir)</span>
-						<span class="font-mono font-bold text-rose-700">{reviewRental.end_date}</span>
+						<span class="font-mono font-bold text-rose-700">{formatDateIndo(reviewRental.end_date)}</span>
 					</div>
 					<div>
 						<span class="text-[#596A53] text-[10px] block">Durasi Masa Sewa</span>
@@ -914,6 +1082,22 @@
 				{/if}
 			</div>
 
+			<!-- 4. KARTU INFORMASI BOOKING BERIKUTNYA (JIKA ADA) -->
+			{#if !isReviewingNextBooking && reviewGarage.next_booking}
+				<div class="p-3.5 bg-[#FDFBF7] border border-[#DAC99B] rounded-xl text-xs space-y-1">
+					<div class="font-bold text-[#8A7545] flex items-center gap-1.5">
+						<Icon name="calendar" size={13} />
+						<span>Antrean Booking Berikutnya Pada Slot Ini:</span>
+					</div>
+					<div class="text-[#383123]">
+						Dipesan oleh: <strong>{reviewGarage.next_booking.tenant_name}</strong> ({reviewGarage.next_booking.vehicle_brand_model} - {reviewGarage.next_booking.license_plate || 'Bebas Plat'})
+					</div>
+					<div class="font-mono text-[#877758]">
+						Jadwal: {formatDateIndo(reviewGarage.next_booking.start_date)} s/d {formatDateIndo(reviewGarage.next_booking.end_date)}
+					</div>
+				</div>
+			{/if}
+
 			<!-- Footer Modal: Hanya Tombol Tutup (Read-Only) -->
 			<div class="pt-3 border-t border-[#F4EFE7] flex items-center justify-between">
 				<span class="text-[11px] text-[#877758] italic flex items-center gap-1">
@@ -932,7 +1116,7 @@
 	</div>
 {/if}
 
-<!-- ================= DELETE MODAL (DELETE CONFIRMATION) ================= -->
+<!-- ================= DELETE MODAL ================= -->
 {#if deleteGarageTarget}
 	<div class="fixed inset-0 z-50 bg-[#252016]/50 backdrop-blur-xs flex items-center justify-center p-4">
 		<div class="bg-white rounded-2xl border border-rose-200 max-w-md w-full p-6 space-y-4 shadow-xl animate-in fade-in zoom-in-95">

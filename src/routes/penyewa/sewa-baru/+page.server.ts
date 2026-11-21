@@ -63,7 +63,7 @@ export const load: PageServerLoad = async ({ locals }) => {
 		ORDER BY g.type, g.code ASC
 	`).all(today, today, today) as any[];
 
-	// Ambil semua sewa aktif untuk kalender ketersediaan armada
+	// Ambil semua sewa aktif untuk kalender ketersediaan slot garasi
 	const allActiveRentals = db.prepare(`
 		SELECT r.garage_id, r.start_date, r.end_date, r.status, u.name as tenant_name
 		FROM rentals r

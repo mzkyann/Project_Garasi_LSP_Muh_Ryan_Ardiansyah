@@ -394,7 +394,7 @@
 
 			{#if data.activeRentals.length === 0}
 				<div class="p-12 text-center text-[#A08F6E] text-xs">
-					Tidak ada armada yang sedang dalam status sewa aktif saat ini.
+					Tidak ada slot garasi yang sedang dalam status sewa aktif saat ini.
 				</div>
 			{:else}
 				<div class="overflow-x-auto">

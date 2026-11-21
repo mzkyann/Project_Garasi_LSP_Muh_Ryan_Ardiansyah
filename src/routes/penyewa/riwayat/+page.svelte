@@ -65,7 +65,7 @@
 		if (collision) {
 			return {
 				isValid: false,
-				error: `Mobil ini telah dibooking oleh penyewa lain pada tanggal ${formatDateIndo(collision.start_date)} s/d ${formatDateIndo(collision.end_date)}. Otomatis tidak dapat diperpanjang ke tanggal tersebut.`,
+				error: `Slot garasi ini telah dibooking oleh penyewa lain pada tanggal ${formatDateIndo(collision.start_date)} s/d ${formatDateIndo(collision.end_date)}. Otomatis tidak dapat diperpanjang ke tanggal tersebut.`,
 				days: 0,
 				cost: 0,
 				collision
@@ -139,7 +139,7 @@
 			</div>
 			<h3 class="text-base font-bold text-[#383123]">Belum Ada Transaksi Sewa Garasi</h3>
 			<p class="text-xs text-[#6B5E45] max-w-sm mx-auto leading-relaxed">
-				Anda belum memiliki permohonan atau kontrak sewa aktif. Silakan pilih armada siap pakai melalui tombol sewa di atas.
+				Anda belum memiliki permohonan atau kontrak sewa aktif. Silakan pilih slot garasi siap pakai melalui tombol sewa di atas.
 			</p>
 		</div>
 	{:else}
