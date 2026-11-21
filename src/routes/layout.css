@@ -1,1 +1,98 @@
 @import 'tailwindcss';
+
+@theme {
+	/* Earth & Olive Brown Palette (Band 1: #877248) */
+	--color-earth-950: #252016;
+	--color-earth-900: #383123;
+	--color-earth-800: #4F4532;
+	--color-earth-700: #6B5E45;
+	--color-earth-600: #877758;
+	--color-earth-500: #A08F6E;
+	--color-earth-400: #BEB092;
+	--color-earth-300: #D8CEB9;
+	--color-earth-200: #EAE3D4;
+	--color-earth-100: #F4EFE7;
+	--color-earth-50: #FAF8F4;
+
+	/* Sage Green Palette (Band 2: #889880) */
+	--color-sage-950: #1E251C;
+	--color-sage-900: #2E382A;
+	--color-sage-800: #424F3D;
+	--color-sage-700: #596A53;
+	--color-sage-600: #71856A;
+	--color-sage-500: #889880;
+	--color-sage-400: #A4B29E;
+	--color-sage-300: #C2CCBC;
+	--color-sage-200: #DFE5DC;
+	--color-sage-100: #EFF3ED;
+	--color-sage-50: #F7FAF6;
+
+	/* Warm Sand & Khaki (Band 4: #DAC99B) */
+	--color-sand-900: #4A3F24;
+	--color-sand-800: #675733;
+	--color-sand-700: #8A7545;
+	--color-sand-600: #B0975C;
+	--color-sand-500: #CBB47C;
+	--color-sand-400: #DAC99B;
+	--color-sand-300: #E6D9B8;
+	--color-sand-200: #F1E9D4;
+	--color-sand-100: #F8F4E8;
+	--color-sand-50: #FCFAF4;
+
+	/* Warm Cream / Ivory Background (Band 3: #EFECE1) */
+	--color-cream-900: #4D473B;
+	--color-cream-800: #736B59;
+	--color-cream-700: #998F79;
+	--color-cream-600: #BEB49D;
+	--color-cream-500: #D7CEB9;
+	--color-cream-400: #E5DEC9;
+	--color-cream-300: #EFE8D6;
+	--color-cream-200: #F4EFE2;
+	--color-cream-100: #F8F5EC;
+	--color-cream-50: #FDFBF7;
+}
+
+/* Custom interactive animations and micro-effects */
+html {
+	scroll-behavior: smooth;
+	accent-color: #71856A;
+}
+
+body {
+	background-color: #F8F5EC;
+	color: #383123;
+}
+
+::selection {
+	background-color: #DFE5DC;
+	color: #2E382A;
+}
+
+/* Subtle focus ring style */
+.input-focus {
+	transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.input-focus:focus {
+	outline: none;
+	border-color: #71856A;
+	box-shadow: 0 0 0 3px rgba(136, 152, 128, 0.25);
+}
+
+/* Interactive card hover */
+.card-hover {
+	transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.2s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.2s ease;
+}
+.card-hover:hover {
+	transform: translateY(-2px);
+	box-shadow: 0 8px 20px -4px rgba(79, 69, 50, 0.08), 0 4px 6px -2px rgba(79, 69, 50, 0.04);
+	border-color: #C2CCBC;
+}
+
+/* Interactive button press effect */
+.btn-interactive {
+	transition: all 0.15s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.btn-interactive:active {
+	transform: scale(0.98);
+}
+
