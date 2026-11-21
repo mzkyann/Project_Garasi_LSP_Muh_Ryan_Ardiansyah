@@ -62,6 +62,12 @@
 								{/if}
 							</a>
 							<a
+								href="/admin/perpanjang"
+								class="px-3 py-1.5 rounded-md text-[#D8CEB9] hover:text-white hover:bg-[#4F4532] transition-colors"
+							>
+								Perpanjang Sewa
+							</a>
+							<a
 								href="/admin/verifikasi"
 								class="px-3 py-1.5 rounded-md text-[#D8CEB9] hover:text-white hover:bg-[#4F4532] transition-colors relative flex items-center gap-1.5"
 							>
