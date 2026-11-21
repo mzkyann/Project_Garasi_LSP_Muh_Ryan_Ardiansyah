@@ -1,3 +1,4 @@
+<!-- src/routes/+page.svelte -->
 <script lang="ts">
 	import type { PageData } from './$types';
 	import Icon from '#lib/components/Icon.svelte';
@@ -12,7 +13,31 @@
 	let simVehicleType = $state<'sepeda' | 'mobil' | 'mobil_listrik'>('mobil');
 	let simRentalType = $state<'harian' | 'bulanan'>('harian');
 	let simDuration = $state<number>(3);
-	let simBatteryKwh = $state<number>(60);
+	let simBatteryKwh = $state<number>(58);
+
+	// 3D Tilt Card Pointer Interactions
+	let cardRotateX = $state<number>(0);
+	let cardRotateY = $state<number>(0);
+	let isHovering3D = $state<boolean>(false);
+
+	function handleMouseMove(e: MouseEvent) {
+		const target = e.currentTarget as HTMLElement;
+		const rect = target.getBoundingClientRect();
+		const x = e.clientX - rect.left - rect.width / 2;
+		const y = e.clientY - rect.top - rect.height / 2;
+		cardRotateX = -(y / (rect.height / 2)) * 14;
+		cardRotateY = (x / (rect.width / 2)) * 14;
+	}
+
+	function handleMouseEnter() {
+		isHovering3D = true;
+	}
+
+	function handleMouseLeave() {
+		isHovering3D = false;
+		cardRotateX = 0;
+		cardRotateY = 0;
+	}
 
 	// Interactive calculation based on realistic garage rental rates
 	let simResult = $derived.by(() => {
@@ -64,483 +89,534 @@
 </script>
 
 <svelte:head>
-	<title>Portal Penyewaan Garasi & Penitipan Kendaraan - SIM-GARASI</title>
+	<title>GARTA - Garasi Takalar | Smart Safe Garage & EV Hub</title>
 </svelte:head>
 
-<div class="space-y-6 py-2">
-	<!-- Hero Header with Earthy Palette & Interactive CTAs -->
-	<div class="bg-white rounded-xl border border-[#DFD5C2] p-6 sm:p-7 shadow-xs relative overflow-hidden card-hover">
-		<div class="absolute -right-12 -top-12 w-48 h-48 rounded-full bg-[#EFF3ED] opacity-60 pointer-events-none"></div>
-		<div class="relative z-10 flex flex-col lg:flex-row lg:items-center justify-between gap-6">
-			<div class="space-y-2 max-w-2xl">
-				<div class="inline-flex items-center gap-2 text-xs font-semibold text-[#596A53] bg-[#EFF3ED] px-3 py-1 rounded-full border border-[#DFE5DC]">
-					<Icon name="shield" size={13} class="text-[#71856A]" />
-					<span>Uji Sertifikasi Kredensial Mikro Pemrogram — LSP & Universitas Ciputra</span>
+<div class="space-y-12 py-2">
+	<!-- ================= 1. HERO SECTION DENGAN 3D ISOMETRIC GARAGE CARD ================= -->
+	<section class="relative overflow-hidden rounded-3xl bg-gradient-to-br from-[#273224] via-[#1F271D] to-[#151C13] border border-[#3A4A36] text-[#FAF8F4] p-8 sm:p-12 shadow-2xl">
+		<!-- Background ambient mesh glow -->
+		<div class="absolute -top-32 -left-32 w-96 h-96 rounded-full bg-[#687D61]/25 blur-3xl pointer-events-none"></div>
+		<div class="absolute -bottom-32 -right-32 w-96 h-96 rounded-full bg-[#C2A649]/20 blur-3xl pointer-events-none"></div>
+
+		<div class="relative z-10 grid grid-cols-1 lg:grid-cols-12 gap-10 items-center">
+			<!-- Hero Left: Headline, Badge, CTAs, Trust Elements -->
+			<div class="lg:col-span-7 space-y-6">
+				<!-- Pill Tagline Takalar -->
+				<div class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[#344230]/90 border border-[#52664D] text-[#E0E9DE] text-xs font-semibold shadow-inner">
+					<span class="w-2 h-2 rounded-full bg-[#E5C772] animate-ping"></span>
+					<span class="text-[#E5C772] font-mono font-bold tracking-wide">GARTA TAKALAR</span>
+					<span class="text-[#8FA587]">•</span>
+					<span>Smart Safe Garage & EV Hub</span>
 				</div>
-				<h1 class="text-2xl sm:text-3xl font-extrabold text-[#383123] tracking-tight leading-tight">
-					Sistem Informasi Penyewaan Garasi & Penitipan Kendaraan
+
+				<!-- Main Headline -->
+				<h1 class="text-3xl sm:text-5xl font-extrabold tracking-tight text-white leading-[1.15]">
+					Penitipan Kendaraan Paling <span class="text-transparent bg-clip-text bg-gradient-to-r from-[#E5C772] via-[#F4DE95] to-[#C2A649]">Aman & Modern</span> di Takalar
 				</h1>
-				<p class="text-xs sm:text-sm text-[#6B5E45] leading-relaxed">
-					Layanan resmi penyewaan slot garasi aman untuk sepeda, sepeda motor, mobil konvensional, serta garasi mobil listrik (EV) dengan fasilitas stasiun pengisian daya terintegrasi.
+
+				<!-- Subheadline -->
+				<p class="text-sm sm:text-base text-[#C2CFC0] leading-relaxed max-w-xl">
+					Solusi sewa slot garasi terstruktur untuk <strong>sepeda, motor, mobil keluarga</strong>, hingga <strong>mobil listrik (EV)</strong> dengan fasilitas SPKLU Wallbox otomatis, perlindungan indoor penuh, dan pengawasan CCTV 24 Jam.
 				</p>
+
+				<!-- Action Buttons -->
+				<div class="flex flex-wrap items-center gap-3.5 pt-2">
+					<a
+						href="/penyewa/sewa-baru"
+						class="px-6 py-3.5 bg-gradient-to-r from-[#687D61] to-[#51644B] hover:from-[#768E6F] hover:to-[#5D7256] text-white font-bold rounded-xl text-xs sm:text-sm transition-all shadow-lg shadow-[#1D241A]/50 flex items-center gap-2 btn-interactive"
+					>
+						<Icon name="plus" size={16} />
+						<span>Sewa Slot Garasi Sekarang</span>
+					</a>
+
+					<a
+						href="#kapasitas"
+						class="px-5 py-3.5 bg-[#2B3627]/80 hover:bg-[#344230] text-[#E0E9DE] font-semibold rounded-xl text-xs sm:text-sm transition-all border border-[#485943] shadow-sm flex items-center gap-2 btn-interactive"
+					>
+						<span>Cek Ketersediaan Slot ↓</span>
+					</a>
+				</div>
+
+				<!-- Trust Elements Mini Bar -->
+				<div class="grid grid-cols-3 gap-3 pt-4 border-t border-[#374533]/70 text-xs font-mono text-[#A8BCA4]">
+					<div>
+						<span class="text-white font-bold block text-sm sm:text-base">{data.totalCount} Slot</span>
+						<span class="text-[11px] text-[#8FA587]">Kapasitas Garasi</span>
+					</div>
+					<div>
+						<span class="text-[#E5C772] font-bold block text-sm sm:text-base">{data.availableCount} Tersedia</span>
+						<span class="text-[11px] text-[#8FA587]">Siap Pakai Hari Ini</span>
+					</div>
+					<div>
+						<span class="text-white font-bold block text-sm sm:text-base">24/7 Live</span>
+						<span class="text-[11px] text-[#8FA587]">CCTV & Keamanan</span>
+					</div>
+				</div>
 			</div>
 
-			<div class="flex flex-wrap items-center gap-3 shrink-0">
-				<a
-					href="/penyewa/sewa-baru"
-					class="px-5 py-2.5 bg-[#71856A] hover:bg-[#596A53] text-white font-semibold rounded-lg text-xs transition-all shadow-sm flex items-center gap-2 btn-interactive"
+			<!-- Hero Right: INTERACTIVE 3D ISOMETRIC GARAGE CARD -->
+			<div class="lg:col-span-5 flex justify-center">
+				<!-- 3D Perspective Box -->
+				<!-- svelte-ignore a11y_no_static_element_interactions -->
+				<div
+					class="relative w-full max-w-sm rounded-2xl cursor-pointer select-none transition-transform duration-200 ease-out"
+					style="perspective: 1000px;"
+					onmousemove={handleMouseMove}
+					onmouseenter={handleMouseEnter}
+					onmouseleave={handleMouseLeave}
 				>
-					<Icon name="plus" size={14} />
-					<span>Sewa Slot Garasi</span>
-				</a>
-				<a
-					href="/auth/login"
-					class="px-5 py-2.5 bg-[#FAF8F4] hover:bg-[#EFE8D6] text-[#4F4532] font-semibold rounded-lg text-xs transition-all border border-[#DFD5C2] shadow-xs btn-interactive"
-				>
-					<span>Masuk Portal</span>
-				</a>
-			</div>
-		</div>
-	</div>
+					<div
+						class="w-full rounded-2xl bg-gradient-to-b from-[#2B3627] to-[#1E261B] border-2 border-[#54684E] p-6 shadow-2xl relative overflow-hidden transition-all"
+						style="transform-style: preserve-3d; transform: rotateX({cardRotateX}deg) rotateY({cardRotateY}deg) scale3d({isHovering3D ? 1.03 : 1}, {isHovering3D ? 1.03 : 1}, 1);"
+					>
+						<!-- Gloss Specular Reflection -->
+						<div class="absolute inset-0 bg-gradient-to-tr from-transparent via-white/5 to-white/10 pointer-events-none rounded-2xl"></div>
 
-	<!-- Status Metrics Grid with Earthy Aesthetic & Progress Bar -->
-	<div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
-		<div class="bg-white p-5 rounded-xl border border-[#DFD5C2] shadow-xs card-hover flex flex-col justify-between">
-			<div>
-				<div class="flex items-center justify-between">
-					<span class="text-[11px] font-bold text-[#6B5E45] uppercase tracking-wider">Total Kapasitas Garasi</span>
-					<div class="w-7 h-7 rounded-md bg-[#FAF8F4] border border-[#DFD5C2] text-[#4F4532] flex items-center justify-center">
-						<Icon name="building" size={15} />
+						<!-- Floating 3D Badge Status -->
+						<div class="flex items-center justify-between pb-4 border-b border-[#3E4F39]" style="transform: translateZ(35px);">
+							<div class="flex items-center gap-2">
+								<div class="w-3 h-3 rounded-full bg-emerald-400 animate-pulse"></div>
+								<span class="font-mono text-xs font-bold text-white tracking-wider">GARASI TAKALAR 3D HUB</span>
+							</div>
+							<span class="text-[10px] font-mono px-2 py-0.5 rounded bg-[#C2A649]/20 text-[#E5C772] border border-[#C2A649]/40 font-bold">
+								Live Interactive
+							</span>
+						</div>
+
+						<!-- 3D Isometric Garage Bay Visualizer -->
+						<div class="py-6 space-y-4" style="transform: translateZ(25px);">
+							<!-- Bay 1: Slot Sepeda & Motor (S001) -->
+							<div class="p-3 rounded-xl bg-[#1F271C] border border-[#3E4F39] flex items-center justify-between hover:border-[#687D61] transition">
+								<div class="flex items-center gap-3">
+									<div class="w-8 h-8 rounded-lg bg-[#2E3B2A] text-[#9EB697] flex items-center justify-center font-bold">
+										<Icon name="bike" size={16} />
+									</div>
+									<div>
+										<span class="font-mono font-bold text-xs text-white block">Slot Sepeda & Motor (S)</span>
+										<span class="text-[10px] text-[#A4B89F]">Gowes & Sepeda Motor Harian</span>
+									</div>
+								</div>
+								<span class="font-mono text-xs text-[#E5C772] font-bold">Rp 20.000<span class="text-[9px] text-[#8FA587]">/hr</span></span>
+							</div>
+
+							<!-- Bay 2: Slot Mobil Bensin (C001) -->
+							<div class="p-3 rounded-xl bg-[#1F271C] border border-[#3E4F39] flex items-center justify-between hover:border-[#687D61] transition">
+								<div class="flex items-center gap-3">
+									<div class="w-8 h-8 rounded-lg bg-[#2E3B2A] text-[#E5C772] flex items-center justify-center font-bold">
+										<Icon name="car" size={16} />
+									</div>
+									<div>
+										<span class="font-mono font-bold text-xs text-white block">Slot Mobil Bensin (C)</span>
+										<span class="text-[10px] text-[#A4B89F]">MPV, SUV, Sedan Indoor Safe</span>
+									</div>
+								</div>
+								<span class="font-mono text-xs text-[#E5C772] font-bold">Rp 50.000<span class="text-[9px] text-[#8FA587]">/hr</span></span>
+							</div>
+
+							<!-- Bay 3: Slot Mobil Listrik & SPKLU (E001) with Animated Glow -->
+							<div class="p-3 rounded-xl bg-gradient-to-r from-[#1F271C] to-[#263522] border-2 border-[#687D61] flex items-center justify-between shadow-md relative overflow-hidden">
+								<div class="absolute -right-4 -bottom-4 w-16 h-16 rounded-full bg-emerald-500/20 blur-xl"></div>
+								<div class="flex items-center gap-3 relative z-10">
+									<div class="w-8 h-8 rounded-lg bg-[#2D4525] text-emerald-300 flex items-center justify-center font-bold shadow-xs">
+										<Icon name="zap" size={16} />
+									</div>
+									<div>
+										<span class="font-mono font-bold text-xs text-white block flex items-center gap-1.5">
+											<span>Slot EV + SPKLU (E)</span>
+											<span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping"></span>
+										</span>
+										<span class="text-[10px] text-emerald-200">Fast Wallbox 22 kW AC Charger</span>
+									</div>
+								</div>
+								<span class="font-mono text-xs text-emerald-300 font-bold relative z-10">Rp 75.000<span class="text-[9px] text-emerald-400">/hr</span></span>
+							</div>
+						</div>
+
+						<!-- Floating 3D Footnote -->
+						<div class="pt-3 border-t border-[#3E4F39] flex items-center justify-between text-[11px] font-mono text-[#8FA587]" style="transform: translateZ(40px);">
+							<span class="flex items-center gap-1 text-[#E0E9DE]">
+								<Icon name="shield" size={13} class="text-[#E5C772]" />
+								<span>Sensor Parkir Otomatis</span>
+							</span>
+							<span class="text-[#E5C772] font-bold">Pattallassang, Takalar</span>
+						</div>
 					</div>
 				</div>
-				<div class="text-2xl sm:text-3xl font-extrabold font-mono text-[#383123] mt-2">{data.totalCount} Slot</div>
-			</div>
-			<div class="text-[11px] text-[#A08F6E] mt-3 pt-2 border-t border-[#F4EFE7]">
-				Total kuota seluruh tipe garasi
 			</div>
 		</div>
+	</section>
 
-		<div class="bg-white p-5 rounded-xl border border-[#C2CCBC] shadow-xs card-hover flex flex-col justify-between">
+	<!-- ================= 2. LIVE CAPACITY MONITOR (BENTO GRID KAPASITAS GARASI) ================= -->
+	<section id="kapasitas" class="space-y-6">
+		<div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-[#DFD5C2] pb-4">
 			<div>
-				<div class="flex items-center justify-between">
-					<span class="text-[11px] font-bold text-[#596A53] uppercase tracking-wider">Slot Tersedia</span>
-					<div class="w-7 h-7 rounded-md bg-[#EFF3ED] border border-[#DFE5DC] text-[#71856A] flex items-center justify-center">
-						<Icon name="check" size={15} />
-					</div>
+				<div class="flex items-center gap-2 text-xs font-bold text-[#687D61] uppercase tracking-wider">
+					<Icon name="building" size={14} />
+					<span>Ketersediaan Real-Time Takalar</span>
 				</div>
-				<div class="text-2xl sm:text-3xl font-extrabold font-mono text-[#596A53] mt-2">{data.availableCount} Slot</div>
-			</div>
-			<div class="text-[11px] text-[#71856A] mt-3 pt-2 border-t border-[#EFF3ED]">
-				Kosong & siap disewa hari ini
-			</div>
-		</div>
-
-		<div class="bg-white p-5 rounded-xl border border-[#E6D9B8] shadow-xs card-hover flex flex-col justify-between">
-			<div>
-				<div class="flex items-center justify-between">
-					<span class="text-[11px] font-bold text-[#8A7545] uppercase tracking-wider">Slot Terisi (Used)</span>
-					<div class="w-7 h-7 rounded-md bg-[#FDFBF7] border border-[#DAC99B] text-[#B0975C] flex items-center justify-center">
-						<Icon name="clock" size={15} />
-					</div>
-				</div>
-				<div class="text-2xl sm:text-3xl font-extrabold font-mono text-[#8A7545] mt-2">{data.totalCount - data.availableCount} Slot</div>
-			</div>
-			<div class="text-[11px] text-[#B0975C] mt-3 pt-2 border-t border-[#F8F4E8]">
-				Sedang digunakan penyewa
-			</div>
-		</div>
-
-		<div class="bg-white p-5 rounded-xl border border-[#DFD5C2] shadow-xs card-hover flex flex-col justify-between">
-			<div>
-				<div class="flex items-center justify-between">
-					<span class="text-[11px] font-bold text-[#6B5E45] uppercase tracking-wider">Tingkat Okupansi</span>
-					<div class="w-7 h-7 rounded-md bg-[#FAF8F4] border border-[#DFD5C2] text-[#71856A] flex items-center justify-center">
-						<Icon name="filter" size={15} />
-					</div>
-				</div>
-				<div class="text-2xl sm:text-3xl font-extrabold font-mono text-[#71856A] mt-2">{occupancyRate}%</div>
-			</div>
-			<div class="mt-3 pt-2 border-t border-[#F4EFE7]">
-				<div class="w-full bg-[#EFF3ED] rounded-full h-1.5 overflow-hidden">
-					<div class="bg-[#71856A] h-1.5 rounded-full transition-all duration-500" style="width: {occupancyRate}%"></div>
-				</div>
-			</div>
-		</div>
-	</div>
-
-	<!-- Ketersediaan Real-time Per Tipe Garasi (Dengan Status Penuh & Tanggal Kosong Berikutnya) -->
-	<div class="space-y-3">
-		<div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-[#F4EFE7] pb-2">
-			<div>
-				<h2 class="text-xs font-bold text-[#4F4532] uppercase tracking-wider flex items-center gap-2">
-					<Icon name="building" size={15} class="text-[#71856A]" />
-					<span>Kapasitas & Status Ketersediaan Garasi Terkini</span>
+				<h2 class="text-xl sm:text-2xl font-extrabold text-[#242D21] mt-1">
+					Status Kapasitas Slot Garasi Saat Ini
 				</h2>
-				<p class="text-[11px] text-[#6B5E45] mt-0.5">
-					Sistem secara otomatis menampilkan kapasitas slot, tanda <strong>PENUH</strong> jika kuota habis, serta perkiraan tanggal berapa lagi slot akan kosong kembali.
+				<p class="text-xs text-[#6B5E45] mt-0.5">
+					Sistem cerdas GARTA mendeteksi kuota secara otomatis. Jika penuh, perkiraan tanggal slot kosong langsung tertera.
 				</p>
 			</div>
-			<span class="text-xs text-[#877758] font-mono bg-[#FAF8F4] px-2.5 py-1 rounded border border-[#DFD5C2] self-start sm:self-auto">
-				Hari Ini: {formatDateIndo(data.today)}
-			</span>
+			<div class="self-start sm:self-auto bg-white px-3 py-1.5 rounded-xl border border-[#DFD5C2] text-xs font-mono text-[#54674E] shadow-xs">
+				📅 Hari Ini: <strong>{formatDateIndo(data.today)}</strong>
+			</div>
 		</div>
 
-		<div class="grid grid-cols-1 md:grid-cols-3 gap-5">
+		<!-- 3 Bento Cards for 3 Garage Types -->
+		<div class="grid grid-cols-1 md:grid-cols-3 gap-6">
 			{#each data.stats as stat}
 				{@const isSepeda = stat.type === 'sepeda'}
 				{@const isMobil = stat.type === 'mobil'}
 				{@const isListrik = stat.type === 'mobil_listrik'}
-				<div class="bg-white rounded-xl border {stat.isFull ? 'border-rose-300 ring-1 ring-rose-300' : 'border-[#DFD5C2]'} p-5 shadow-xs flex flex-col justify-between card-hover">
-					<div>
-						<!-- Header Card: Icon + Title + Prefix Badge -->
-						<div class="flex items-center justify-between pb-3 border-b border-[#F4EFE7]">
-							<div class="flex items-center gap-2.5">
-								<div class="w-10 h-10 rounded-lg flex items-center justify-center border {isSepeda ? 'bg-[#EFF3ED] text-[#71856A] border-[#DFE5DC]' : isMobil ? 'bg-[#FAF8F4] text-[#877758] border-[#DFD5C2]' : 'bg-[#EFF3ED] text-[#596A53] border-[#DFE5DC]'}">
+				<div class="bg-white rounded-2xl border {stat.isFull ? 'border-rose-300 ring-2 ring-rose-200' : 'border-[#DFD5C2]'} p-6 shadow-xs flex flex-col justify-between card-hover transition-all">
+					<div class="space-y-4">
+						<!-- Top Info Header -->
+						<div class="flex items-center justify-between">
+							<div class="flex items-center gap-3">
+								<div class="w-11 h-11 rounded-xl flex items-center justify-center border {isSepeda ? 'bg-[#EFF3ED] text-[#54674E] border-[#DFE5DC]' : isMobil ? 'bg-[#FAF8F4] text-[#877758] border-[#DFD5C2]' : 'bg-[#EBF3E8] text-[#3D5E34] border-[#CCE0C7]'}">
 									{#if isSepeda}
-										<Icon name="bike" size={20} />
+										<Icon name="bike" size={22} />
 									{:else if isMobil}
-										<Icon name="car" size={20} />
+										<Icon name="car" size={22} />
 									{:else}
-										<Icon name="zap" size={20} />
+										<Icon name="zap" size={22} />
 									{/if}
 								</div>
 								<div>
-									<span class="font-bold text-sm text-[#383123] block leading-tight">
+									<h3 class="font-extrabold text-base text-[#242D21]">
 										{#if isSepeda}Garasi Sepeda & Motor{:else if isMobil}Garasi Mobil Bensin{:else}Garasi Mobil Listrik (EV){/if}
-									</span>
-									<span class="text-[10px] text-[#A08F6E]">
-										{#if isSepeda}Sepeda Gowes & Sepeda Motor{:else if isMobil}MPV, SUV, Sedan, City Car{:else}Fasilitas SPKLU AC Wallbox{/if}
+									</h3>
+									<span class="text-[11px] text-[#877758] font-medium">
+										{#if isSepeda}Roda Dua Indoor{:else if isMobil}Roda Empat Standar{:else}Dilengkapi Wallbox SPKLU{/if}
 									</span>
 								</div>
 							</div>
-							<span class="font-mono text-xs font-extrabold px-2 py-0.5 rounded border {isSepeda ? 'bg-[#EFF3ED] text-[#596A53] border-[#DFE5DC]' : isMobil ? 'bg-[#FAF8F4] text-[#877758] border-[#DFD5C2]' : 'bg-[#EFF3ED] text-[#596A53] border-[#DFE5DC]'}">
-								{#if isSepeda}S001..{:else if isMobil}C001..{:else}E001..{/if}
+							<span class="font-mono text-xs font-extrabold px-2.5 py-1 rounded-lg border {isSepeda ? 'bg-[#EFF3ED] text-[#54674E] border-[#DFE5DC]' : isMobil ? 'bg-[#FAF8F4] text-[#877758] border-[#DFD5C2]' : 'bg-[#EBF3E8] text-[#3D5E34] border-[#CCE0C7]'}">
+								{#if isSepeda}Prefix S{:else if isMobil}Prefix C{:else}Prefix E{/if}
 							</span>
 						</div>
 
-						<!-- Status Badge Penuh / Tersedia -->
-						<div class="mt-3">
-							{#if stat.isFull}
-								<div class="p-3 bg-rose-50 border border-rose-200 rounded-lg space-y-1">
-									<div class="flex items-center justify-between">
-										<span class="font-mono font-extrabold text-xs text-rose-700 flex items-center gap-1.5">
-											<Icon name="alert" size={13} />
-											<span>⛔ GARASI PENUH</span>
-										</span>
-										<span class="text-[10px] font-mono text-rose-600 bg-white px-2 py-0.5 rounded border border-rose-200 font-bold">
-											0/{stat.total} Kosong
-										</span>
-									</div>
-									<div class="text-[11px] text-rose-800 pt-1 border-t border-rose-200/60 flex items-center justify-between">
-										<span>Kosong lagi pada:</span>
-										<strong class="font-mono font-bold text-rose-900">
-											{stat.nextEmptyDate ? formatDateIndo(stat.nextEmptyDate) : 'Menunggu Selesai'}
-										</strong>
-									</div>
-								</div>
-							{:else}
-								<div class="p-2.5 bg-[#EFF3ED] border border-[#C2CCBC] rounded-lg flex items-center justify-between">
-									<div class="flex items-center gap-1.5 text-[#2E382A] text-xs font-bold">
-										<Icon name="check" size={14} class="text-[#71856A]" />
-										<span>✓ Tersedia Siap Sewa</span>
-									</div>
-									<span class="text-xs font-mono font-extrabold text-[#596A53] bg-white px-2.5 py-0.5 rounded border border-[#DFE5DC]">
-										{stat.available} dari {stat.total} Slot Kosong
+						<!-- Status Ketersediaan Slot -->
+						{#if stat.isFull}
+							<div class="p-3.5 bg-rose-50 border border-rose-200 rounded-xl space-y-1">
+								<div class="flex items-center justify-between">
+									<span class="font-mono font-extrabold text-xs text-rose-700 flex items-center gap-1.5">
+										<Icon name="alert" size={14} />
+										<span>⛔ GARASI PENUH</span>
+									</span>
+									<span class="text-[10px] font-mono font-bold bg-white px-2 py-0.5 rounded border border-rose-200 text-rose-600">
+										0/{stat.total} Slot Kosong
 									</span>
 								</div>
-							{/if}
-						</div>
+								<div class="text-[11px] text-rose-800 pt-1.5 border-t border-rose-200/70 flex items-center justify-between">
+									<span>Kosong kembali pada:</span>
+									<strong class="font-mono font-bold text-rose-900">
+										{stat.nextEmptyDate ? formatDateIndo(stat.nextEmptyDate) : 'Menunggu Selesai'}
+									</strong>
+								</div>
+							</div>
+						{:else}
+							<div class="p-3 bg-[#EFF3ED] border border-[#C2CCBC] rounded-xl flex items-center justify-between">
+								<div class="flex items-center gap-2 text-[#242D21] text-xs font-bold">
+									<Icon name="check" size={15} class="text-[#687D61]" />
+									<span>✓ Tersedia Siap Sewa</span>
+								</div>
+								<span class="text-xs font-mono font-extrabold text-[#54674E] bg-white px-2.5 py-1 rounded-lg border border-[#DFE5DC] shadow-2xs">
+									{stat.available} dari {stat.total} Slot
+								</span>
+							</div>
+						{/if}
 
-						<!-- Keterangan & Deskripsi -->
-						<p class="text-xs text-[#6B5E45] mt-3 leading-relaxed">
+						<p class="text-xs text-[#5D5240] leading-relaxed">
 							{#if isSepeda}
-								Slot penitipan aman berkanopi khusus roda dua. Akses gembok individual dan terlindung dari cuaca panas maupun hujan.
+								Tempat parkir beratap anti karat khusus sepeda gowes dan motor. Bebas panas terik & hujan, dengan sistem kunci individual.
 							{:else if isMobil}
-								Slot parkir beratap untuk kendaraan roda empat konvensional (bensin/diesel) atau EV yang tidak memerlukan pengisian daya.
+								Slot garasi luas berkanopi kokoh untuk mobil keluarga (Avanza, Innova, Brio, Fortuner, dll) dengan akses keluar masuk 24 jam.
 							{:else}
-								Slot garasi khusus kendaraan listrik dilengkapi fasilitas AC Wallbox Charger. Wajib cas penuh (100% kapasitas baterai).
+								Slot garasi eksklusif kendaraan listrik (Ioniq 5, Wuling Air EV, Byd, dll) dilengkapi AC Wallbox Charger hingga 22 kW.
 							{/if}
 						</p>
 
-						<!-- Tarif Sewa Realistis Penitipan Kendaraan -->
-						<div class="mt-4 space-y-1.5 text-xs bg-[#FAF8F4] p-3 rounded-lg border border-[#DFD5C2]">
-							<div class="flex justify-between py-0.5">
-								<span class="text-[#877758]">Tarif Sewa Harian:</span>
-								<span class="font-mono font-bold text-[#383123]">{formatRupiah(stat.dailyPrice)} / hari</span>
+						<!-- Price Breakdown Box -->
+						<div class="space-y-2 bg-[#FAF8F4] p-3.5 rounded-xl border border-[#DFD5C2] text-xs">
+							<div class="flex justify-between items-center">
+								<span class="text-[#877758]">Tarif Harian:</span>
+								<span class="font-mono font-bold text-[#242D21] text-sm">{formatRupiah(stat.dailyPrice)} <span class="text-[10px] font-normal text-[#877758]">/hari</span></span>
 							</div>
-							<div class="flex justify-between py-0.5 border-t border-[#EAE3D4] pt-1">
-								<span class="text-[#877758]">Tarif Sewa Bulanan (25x):</span>
-								<span class="font-mono font-bold text-[#71856A]">{formatRupiah(stat.monthlyPrice)} / bulan</span>
+							<div class="flex justify-between items-center border-t border-[#EAE3D4] pt-1.5">
+								<span class="text-[#877758]">Tarif Bulanan (25x):</span>
+								<span class="font-mono font-bold text-[#687D61]">{formatRupiah(stat.monthlyPrice)} <span class="text-[10px] font-normal text-[#877758]">/bln</span></span>
 							</div>
 							{#if isListrik}
-								<div class="flex justify-between py-0.5 border-t border-[#EAE3D4] pt-1 text-[#596A53]">
-									<span>Tarif Listrik SPKLU:</span>
-									<span class="font-mono font-bold">{formatRupiah(stat.electricityPrice || 2500)} / kWh</span>
+								<div class="flex justify-between items-center border-t border-[#EAE3D4] pt-1.5 text-[#3D5E34]">
+									<span>Tarif Cas Listrik:</span>
+									<span class="font-mono font-bold">{formatRupiah(stat.electricityPrice || 2500)} <span class="text-[10px] font-normal text-[#54674E]">/kWh</span></span>
 								</div>
 							{/if}
 						</div>
 					</div>
 
-					<!-- Tombol Booking / Sewa Cepat -->
-					<div class="mt-4 pt-3 border-t border-[#F4EFE7]">
+					<!-- Bottom Action Link -->
+					<div class="mt-5 pt-3 border-t border-[#F4EFE7]">
 						<a
 							href="/penyewa/sewa-baru"
-							class="w-full py-2 {stat.isFull ? 'bg-[#BEB092] hover:bg-[#A08F6E]' : 'bg-[#71856A] hover:bg-[#596A53]'} text-white text-xs font-bold rounded-lg text-center block transition shadow-xs btn-interactive"
+							class="w-full py-2.5 rounded-xl font-bold text-xs text-center block transition shadow-xs btn-interactive {stat.isFull ? 'bg-[#BEB092] hover:bg-[#A08F6E] text-white' : 'bg-[#687D61] hover:bg-[#54674E] text-white'}"
 						>
 							{#if stat.isFull}
-								<span>Lihat Jadwal Slot Kosong</span>
+								Lihat Antrean Jadwal Kosong
 							{:else}
-								<span>Sewa Slot {isSepeda ? 'Sepeda / Motor' : isMobil ? 'Mobil Bensin' : 'Mobil Listrik'}</span>
+								Sewa Slot {isSepeda ? 'Motor' : isMobil ? 'Mobil' : 'EV'} Ini →
 							{/if}
 						</a>
 					</div>
 				</div>
 			{/each}
 		</div>
-	</div>
+	</section>
 
-	<!-- Interactive Live Cost Estimator (Simulasi Biaya Penitipan Garasi) -->
-	<div class="bg-white rounded-xl border border-[#DFD5C2] p-6 shadow-xs card-hover">
-		<div class="flex flex-col sm:flex-row sm:items-center justify-between pb-4 border-b border-[#F4EFE7] gap-2">
-			<div>
-				<span class="text-[11px] font-bold uppercase tracking-wider text-[#71856A] flex items-center gap-1.5">
-					<Icon name="zap" size={14} />
-					<span>Kalkulator Simulasi Biaya Penitipan Garasi</span>
-				</span>
-				<h2 class="text-lg font-bold text-[#383123] mt-0.5">Estimasi Biaya Sewa Tempat Garasi</h2>
+	<!-- ================= 3. SMART INTERACTIVE FEE CALCULATOR ================= -->
+	<section class="bg-white rounded-3xl border border-[#DFD5C2] p-8 sm:p-10 shadow-sm card-hover">
+		<div class="max-w-2xl mb-8">
+			<div class="inline-flex items-center gap-2 text-xs font-bold text-[#687D61] uppercase tracking-wider mb-1">
+				<Icon name="clock" size={14} />
+				<span>Simulasi Estimasi Biaya</span>
 			</div>
-			<span class="text-xs text-[#877758] font-mono bg-[#FAF8F4] px-3 py-1 rounded-full border border-[#EAE3D4]">
-				Sesuai Soal: Harian (≤30 hari) & Bulanan (Tarif = 25 x Harian)
-			</span>
+			<h2 class="text-2xl font-extrabold text-[#242D21]">
+				Kalkulator Sewa Garasi GARTA Takalar
+			</h2>
+			<p class="text-xs sm:text-sm text-[#6B5E45] mt-1">
+				Hitung estimasi pengeluaran penitipan kendaraan Anda secara langsung dan transparan sebelum melakukan pemesanan.
+			</p>
 		</div>
 
-		<div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-5">
-			<!-- Interactive Form Controls -->
-			<div class="lg:col-span-2 space-y-4">
-				<!-- Vehicle Selector Pills -->
+		<div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
+			<!-- Controls Input -->
+			<div class="lg:col-span-7 space-y-6">
+				<!-- 1. Tipe Kendaraan -->
 				<div>
-					<span class="block text-xs font-bold text-[#4F4532] mb-1.5">Pilih Kategori Kendaraan Anda</span>
-					<div class="grid grid-cols-3 gap-2">
+					<span class="block text-xs font-bold text-[#4F4532] mb-2">1. Pilih Jenis Kendaraan</span>
+					<div class="grid grid-cols-3 gap-3">
 						<button
 							type="button"
 							onclick={() => (simVehicleType = 'sepeda')}
-							class="p-3 rounded-lg border text-left transition-all btn-interactive flex items-center gap-2.5 {simVehicleType === 'sepeda' ? 'bg-[#EFF3ED] border-[#71856A] text-[#2E382A] ring-1 ring-[#71856A]' : 'bg-[#FAF8F4] border-[#DFD5C2] text-[#6B5E45] hover:bg-[#F4EFE7]'}"
+							class="p-3.5 rounded-xl border text-left transition-all btn-interactive {simVehicleType === 'sepeda' ? 'bg-[#EFF3ED] border-[#687D61] ring-2 ring-[#687D61] text-[#242D21]' : 'bg-[#FAF8F4] border-[#DFD5C2] text-[#6B5E45]'}"
 						>
-							<div class="w-8 h-8 rounded bg-white text-[#71856A] flex items-center justify-center shrink-0 border border-[#DFE5DC]">
-								<Icon name="bike" size={16} />
+							<div class="font-bold text-xs flex items-center gap-1.5">
+								<Icon name="bike" size={14} />
+								<span>Motor / Sepeda</span>
 							</div>
-							<div>
-								<div class="font-bold text-xs">Sepeda / Motor</div>
-								<div class="text-[10px] text-[#71856A]">Garasi S (Rp 20.000/hr)</div>
-							</div>
+							<div class="text-[10px] font-mono text-[#687D61] mt-1">Rp 20.000 / hari</div>
 						</button>
 
 						<button
 							type="button"
 							onclick={() => (simVehicleType = 'mobil')}
-							class="p-3 rounded-lg border text-left transition-all btn-interactive flex items-center gap-2.5 {simVehicleType === 'mobil' ? 'bg-[#EFF3ED] border-[#71856A] text-[#2E382A] ring-1 ring-[#71856A]' : 'bg-[#FAF8F4] border-[#DFD5C2] text-[#6B5E45] hover:bg-[#F4EFE7]'}"
+							class="p-3.5 rounded-xl border text-left transition-all btn-interactive {simVehicleType === 'mobil' ? 'bg-[#EFF3ED] border-[#687D61] ring-2 ring-[#687D61] text-[#242D21]' : 'bg-[#FAF8F4] border-[#DFD5C2] text-[#6B5E45]'}"
 						>
-							<div class="w-8 h-8 rounded bg-white text-[#877758] flex items-center justify-center shrink-0 border border-[#DFE5DC]">
-								<Icon name="car" size={16} />
+							<div class="font-bold text-xs flex items-center gap-1.5">
+								<Icon name="car" size={14} />
+								<span>Mobil Bensin</span>
 							</div>
-							<div>
-								<div class="font-bold text-xs">Mobil Bensin</div>
-								<div class="text-[10px] text-[#877758]">Garasi C (Rp 50.000/hr)</div>
-							</div>
+							<div class="text-[10px] font-mono text-[#877758] mt-1">Rp 50.000 / hari</div>
 						</button>
 
 						<button
 							type="button"
 							onclick={() => (simVehicleType = 'mobil_listrik')}
-							class="p-3 rounded-lg border text-left transition-all btn-interactive flex items-center gap-2.5 {simVehicleType === 'mobil_listrik' ? 'bg-[#EFF3ED] border-[#71856A] text-[#2E382A] ring-1 ring-[#71856A]' : 'bg-[#FAF8F4] border-[#DFD5C2] text-[#6B5E45] hover:bg-[#F4EFE7]'}"
+							class="p-3.5 rounded-xl border text-left transition-all btn-interactive {simVehicleType === 'mobil_listrik' ? 'bg-[#EFF3ED] border-[#687D61] ring-2 ring-[#687D61] text-[#242D21]' : 'bg-[#FAF8F4] border-[#DFD5C2] text-[#6B5E45]'}"
 						>
-							<div class="w-8 h-8 rounded bg-white text-[#596A53] flex items-center justify-center shrink-0 border border-[#DFE5DC]">
-								<Icon name="zap" size={16} />
+							<div class="font-bold text-xs flex items-center gap-1.5">
+								<Icon name="zap" size={14} />
+								<span>Mobil EV</span>
 							</div>
-							<div>
-								<div class="font-bold text-xs">Mobil Listrik (EV)</div>
-								<div class="text-[10px] text-[#596A53]">Garasi E (Rp 75.000/hr)</div>
-							</div>
+							<div class="text-[10px] font-mono text-[#54674E] mt-1">Rp 75.000 / hari</div>
 						</button>
 					</div>
 				</div>
 
-				<!-- Rental Type Toggle & Duration Slider -->
+				<!-- 2. Skema & Durasi Sewa -->
 				<div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
 					<div>
-						<span class="block text-xs font-bold text-[#4F4532] mb-1.5">Tipe Durasi Sewa</span>
-						<div class="grid grid-cols-2 gap-2 bg-[#FAF8F4] p-1 rounded-lg border border-[#DFD5C2]">
-							<button
-								type="button"
-								onclick={() => {
-									simRentalType = 'harian';
-									if (simDuration > 30) simDuration = 7;
-								}}
-								class="py-1.5 rounded-md text-xs font-bold transition-all {simRentalType === 'harian' ? 'bg-[#71856A] text-white shadow-xs' : 'text-[#6B5E45] hover:text-[#383123]'}"
-							>
-								Harian (1-30 Hari)
-							</button>
-							<button
-								type="button"
-								onclick={() => {
-									simRentalType = 'bulanan';
-									if (simDuration > 12) simDuration = 1;
-								}}
-								class="py-1.5 rounded-md text-xs font-bold transition-all {simRentalType === 'bulanan' ? 'bg-[#71856A] text-white shadow-xs' : 'text-[#6B5E45] hover:text-[#383123]'}"
-							>
-								Bulanan (Hemat 25x)
-							</button>
-						</div>
+						<label for="simRentalType" class="block text-xs font-bold text-[#4F4532] mb-1.5">2. Kategori Durasi</label>
+						<select
+							id="simRentalType"
+							bind:value={simRentalType}
+							class="w-full px-3.5 py-2.5 text-xs border border-[#DFD5C2] rounded-xl input-focus bg-[#FAF8F4] font-medium"
+						>
+							<option value="harian">Sewa Harian (Maks. 30 Hari)</option>
+							<option value="bulanan">Sewa Bulanan (Hemat 25x Tarif)</option>
+						</select>
 					</div>
 
 					<div>
-						<div class="flex justify-between items-center mb-1.5">
-							<span class="text-xs font-bold text-[#4F4532]">
-								Durasi: <span class="font-mono text-[#71856A]">{simDuration} {simRentalType === 'harian' ? 'Hari' : 'Bulan'}</span>
-							</span>
-							<span class="text-[11px] text-[#A08F6E]">
-								{simRentalType === 'harian' ? 'Maksimal 30 hari' : 'Pilihan 1-12 bulan'}
-							</span>
-						</div>
+						<label for="simDuration" class="block text-xs font-bold text-[#4F4532] mb-1.5">
+							Durasi ({simRentalType === 'harian' ? 'Hari' : 'Bulan'})
+						</label>
 						<input
-							type="range"
+							type="number"
+							id="simDuration"
+							bind:value={simDuration}
 							min="1"
 							max={simRentalType === 'harian' ? 30 : 12}
-							bind:value={simDuration}
-							aria-label="Durasi simulasi sewa"
-							class="w-full accent-[#71856A] cursor-pointer"
+							class="w-full px-3.5 py-2.5 text-xs border border-[#DFD5C2] rounded-xl input-focus bg-[#FAF8F4] font-mono font-bold"
 						/>
 					</div>
 				</div>
 
-				<!-- EV Battery Capacity (Conditional) -->
+				<!-- 3. Jika Mobil Listrik: Input Baterai kWh -->
 				{#if simVehicleType === 'mobil_listrik'}
-					<div class="p-4 bg-[#EFF3ED] rounded-lg border border-[#C2CCBC] space-y-2">
-						<div class="flex items-center justify-between">
-							<label class="text-xs font-bold text-[#2E382A] flex items-center gap-1.5">
-								<Icon name="zap" size={13} class="text-[#71856A]" />
-								<span>Kapasitas Baterai Kendaraan Listrik: <span class="font-mono text-[#596A53]">{simBatteryKwh} kWh</span> (Wajib Diisi Penuh)</span>
-							</label>
-							<span class="text-[11px] font-mono font-bold text-[#596A53] bg-white px-2 py-0.5 rounded border border-[#DFE5DC]">
-								Tarif Cas: Rp 2.500 / kWh
-							</span>
+					<div class="bg-[#EFF3ED] border border-[#C2CCBC] p-4 rounded-xl space-y-2">
+						<div class="flex justify-between items-center text-xs">
+							<label for="simBatteryKwh" class="font-bold text-[#242D21]">Kapasitas Baterai Listrik (kWh):</label>
+							<span class="font-mono font-bold text-[#54674E] bg-white px-2 py-0.5 rounded border border-[#DFE5DC]">{simBatteryKwh} kWh</span>
 						</div>
 						<input
 							type="range"
-							min="10"
-							max="120"
-							step="5"
+							id="simBatteryKwh"
 							bind:value={simBatteryKwh}
-							class="w-full accent-[#71856A] cursor-pointer"
+							min="15"
+							max="100"
+							step="1"
+							class="w-full accent-[#687D61]"
 						/>
-						<p class="text-[11px] text-[#596A53]">
-							Peraturan Sistem: Mobil listrik di garasi mobil listrik wajib mengisi baterai sampai 100% penuh (Kapasitas kWh x Rp 2.500).
+						<p class="text-[10px] text-[#54674E]">
+							* Cas penuh SPKLU 100% baterai: {simBatteryKwh} kWh × Rp 2.500 = {formatRupiah(simBatteryKwh * 2500)}
 						</p>
 					</div>
 				{/if}
 			</div>
 
-			<!-- Live Calculation Result Card -->
-			<div class="bg-[#FAF8F4] p-5 rounded-xl border border-[#DFD5C2] flex flex-col justify-between shadow-xs">
-				<div class="space-y-3">
-					<div class="text-xs font-bold text-[#4F4532] uppercase tracking-wide border-b border-[#EAE3D4] pb-2">
-						Rincian Estimasi Biaya
+			<!-- Result Showcase Box -->
+			<div class="lg:col-span-5 bg-gradient-to-br from-[#242D21] to-[#182016] text-[#FAF8F4] p-7 rounded-2xl border border-[#3E4F39] shadow-xl space-y-4">
+				<div class="flex items-center justify-between border-b border-[#3E4F39] pb-3">
+					<span class="font-mono text-xs font-bold text-[#E5C772] uppercase tracking-wider">Hasil Estimasi Biaya</span>
+					<span class="text-[10px] font-mono px-2 py-0.5 rounded bg-[#687D61] text-white">Takalar Official</span>
+				</div>
+
+				<div class="space-y-2.5 text-xs font-mono">
+					<div class="flex justify-between text-[#C9D6C5]">
+						<span>Sewa Pokok Garasi:</span>
+						<span class="font-bold text-white">{formatRupiah(simResult.baseCost)}</span>
 					</div>
-
-					<div class="space-y-2 text-xs">
-						<div class="flex justify-between text-[#6B5E45]">
-							<span>Tarif Dasar Garasi:</span>
-							<span class="font-mono font-semibold text-[#383123]">
-								{formatRupiah(simRentalType === 'harian' ? simResult.dailyRate : simResult.monthlyRate)}
-							</span>
+					{#if simVehicleType === 'mobil_listrik'}
+						<div class="flex justify-between text-emerald-300">
+							<span>Biaya Cas SPKLU ({simBatteryKwh} kWh):</span>
+							<span class="font-bold">{formatRupiah(simResult.electricityCost)}</span>
 						</div>
-						<div class="flex justify-between text-[#6B5E45]">
-							<span>Durasi Sewa:</span>
-							<span class="font-mono font-semibold text-[#383123]">
-								{simDuration} {simRentalType === 'harian' ? 'hari' : 'bulan'}
-							</span>
-						</div>
-						<div class="flex justify-between text-[#6B5E45]">
-							<span>Subtotal Sewa Garasi:</span>
-							<span class="font-mono font-semibold text-[#383123]">
-								{formatRupiah(simResult.baseCost)}
-							</span>
-						</div>
-
-						{#if simVehicleType === 'mobil_listrik'}
-							<div class="flex justify-between text-[#596A53] pt-1 border-t border-[#EAE3D4]">
-								<span>Cas Baterai Full ({simBatteryKwh} kWh):</span>
-								<span class="font-mono font-semibold">
-									{formatRupiah(simResult.electricityCost)}
-								</span>
-							</div>
-						{/if}
+					{/if}
+					<div class="flex justify-between text-[#C9D6C5]">
+						<span>Durasi Pilihan:</span>
+						<span class="font-bold text-white">{simDuration} {simRentalType === 'harian' ? 'Hari' : 'Bulan'}</span>
 					</div>
 				</div>
 
-				<div class="pt-4 border-t border-[#DFD5C2] mt-4">
-					<div class="text-[11px] font-bold text-[#6B5E45] uppercase tracking-wide">Total Estimasi Tagihan</div>
-					<div class="text-2xl font-extrabold font-mono text-[#596A53] mt-1">
+				<div class="pt-4 border-t-2 border-[#3E4F39] space-y-1">
+					<span class="text-[10px] text-[#A8BCA4] uppercase tracking-wider block font-mono">Total Pembayaran Diperkirakan:</span>
+					<div class="text-2xl sm:text-3xl font-extrabold font-mono text-[#E5C772]">
 						{formatRupiah(simResult.totalCost)}
 					</div>
+				</div>
+
+				<div class="pt-2">
 					<a
 						href="/penyewa/sewa-baru"
-						class="mt-3 w-full py-2 bg-[#71856A] hover:bg-[#596A53] text-white text-xs font-bold rounded-lg text-center block transition-all shadow-xs btn-interactive"
+						class="w-full py-3 bg-[#687D61] hover:bg-[#54674E] text-white font-bold rounded-xl text-xs text-center block transition shadow-md btn-interactive"
 					>
-						Sewa Slot Garasi Sekarang
+						Lanjutkan Sewa dengan Biaya Ini →
 					</a>
 				</div>
 			</div>
 		</div>
-	</div>
+	</section>
 
-	<!-- Prosedur Operasional Standar Sesuai Soal Uji Praktik -->
-	<div class="bg-white rounded-xl border border-[#DFD5C2] p-6 shadow-xs">
-		<h3 class="text-xs font-bold text-[#4F4532] uppercase tracking-wider mb-4 flex items-center gap-2">
-			<Icon name="file-text" size={15} class="text-[#71856A]" />
-			<span>Alur Operasional Penyewaan Garasi Sesuai Spesifikasi Soal</span>
-		</h3>
+	<!-- ================= 4. KEUNGGULAN EKSKLUSIF GARTA TAKALAR ================= -->
+	<section class="space-y-6">
+		<div class="text-center max-w-xl mx-auto">
+			<span class="text-xs font-bold text-[#687D61] uppercase tracking-wider block mb-1">Standar Kualitas & Kenyamanan</span>
+			<h2 class="text-2xl font-extrabold text-[#242D21]">Mengapa Memilih GARTA Takalar?</h2>
+			<p class="text-xs sm:text-sm text-[#6B5E45] mt-1">
+				Fasilitas penitipan terpadu yang dirancang untuk menjaga kondisi kendaraan Anda tetap prima dan aman selama Anda beraktivitas.
+			</p>
+		</div>
 
-		<div class="grid grid-cols-1 md:grid-cols-4 gap-4 text-xs">
-			<div class="p-4 bg-[#FAF8F4] rounded-lg border border-[#DFD5C2]/80 space-y-1.5">
-				<div class="w-6 h-6 rounded-full bg-[#71856A] text-white flex items-center justify-center font-bold text-xs mb-2">
-					1
+		<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+			<!-- Feature 1 -->
+			<div class="bg-white p-6 rounded-2xl border border-[#DFD5C2] shadow-xs space-y-3 card-hover">
+				<div class="w-10 h-10 rounded-xl bg-[#EFF3ED] text-[#687D61] border border-[#DFE5DC] flex items-center justify-center font-bold">
+					<Icon name="shield" size={20} />
 				</div>
-				<div class="font-bold text-[#383123]">Pendaftaran Penyewa Baru</div>
-				<p class="text-[#6B5E45] leading-relaxed text-[11px]">
-					Calon penyewa mendaftar dengan NIK (16 digit), Nama Lengkap, Nomor Telepon, Email (sebagai username), dan Password.
+				<h3 class="font-bold text-sm text-[#242D21]">Proteksi CCTV 24/7 & Satpam</h3>
+				<p class="text-xs text-[#6B5E45] leading-relaxed">
+					Didukung sistem kamera pengawas terpusat dan petugas jaga satpam Takalar 2 lapis untuk keamanan maksimal siang dan malam.
 				</p>
 			</div>
 
-			<div class="p-4 bg-[#FAF8F4] rounded-lg border border-[#DFD5C2]/80 space-y-1.5">
-				<div class="w-6 h-6 rounded-full bg-[#71856A] text-white flex items-center justify-center font-bold text-xs mb-2">
-					2
+			<!-- Feature 2 -->
+			<div class="bg-white p-6 rounded-2xl border border-[#DFD5C2] shadow-xs space-y-3 card-hover">
+				<div class="w-10 h-10 rounded-xl bg-[#FAF8F4] text-[#877758] border border-[#DFD5C2] flex items-center justify-center font-bold">
+					<Icon name="building" size={20} />
 				</div>
-				<div class="font-bold text-[#383123]">Verifikasi KTP Admin</div>
-				<p class="text-[#6B5E45] leading-relaxed text-[11px]">
-					Setelah memeriksa validitas KTP, Administrator menyetujui (ACC) atau menolak akun pendaftar penyewa baru.
+				<h3 class="font-bold text-sm text-[#242D21]">Kanopi Indoor Anti Panas</h3>
+				<p class="text-xs text-[#6B5E45] leading-relaxed">
+					Seluruh slot dilindungi atap baja ringan berinsulasi panas untuk melindungi cat mobil dan motor dari terik matahari dan hujan lebat.
 				</p>
 			</div>
 
-			<div class="p-4 bg-[#FAF8F4] rounded-lg border border-[#DFD5C2]/80 space-y-1.5">
-				<div class="w-6 h-6 rounded-full bg-[#71856A] text-white flex items-center justify-center font-bold text-xs mb-2">
-					3
+			<!-- Feature 3 -->
+			<div class="bg-white p-6 rounded-2xl border border-[#DFD5C2] shadow-xs space-y-3 card-hover">
+				<div class="w-10 h-10 rounded-xl bg-[#EFF3ED] text-[#54674E] border-[#DFE5DC] flex items-center justify-center font-bold">
+					<Icon name="zap" size={20} />
 				</div>
-				<div class="font-bold text-[#383123]">Penyewaan Garasi & Detail Kendaraan</div>
-				<p class="text-[#6B5E45] leading-relaxed text-[11px]">
-					Penyewa memasukkan merek/tipe kendaraan, nomor plat (kecuali sepeda), kapasitas kWh listrik, durasi sewa, dan memilih slot garasi kosong.
+				<h3 class="font-bold text-sm text-[#242D21]">SPKLU Wallbox 22 kW EV</h3>
+				<p class="text-xs text-[#6B5E45] leading-relaxed">
+					Stasiun pengisian daya kendaraan listrik terstandar dengan pencatatan meteran kWh transparan dan cut-off proteksi arus lebih.
 				</p>
 			</div>
 
-			<div class="p-4 bg-[#FAF8F4] rounded-lg border border-[#DFD5C2]/80 space-y-1.5">
-				<div class="w-6 h-6 rounded-full bg-[#71856A] text-white flex items-center justify-center font-bold text-xs mb-2">
-					4
+			<!-- Feature 4 -->
+			<div class="bg-white p-6 rounded-2xl border border-[#DFD5C2] shadow-xs space-y-3 card-hover">
+				<div class="w-10 h-10 rounded-xl bg-[#FAF8F4] text-[#71856A] border border-[#DFD5C2] flex items-center justify-center font-bold">
+					<Icon name="check" size={20} />
 				</div>
-				<div class="font-bold text-[#383123]">Pelunasan & Perpanjangan</div>
-				<p class="text-[#6B5E45] leading-relaxed text-[11px]">
-					Upload bukti bayar untuk pelunasan sewa. Status garasi otomatis menjadi <em>used</em>. Kontrak dapat diperpanjang jika belum ada booking bentrok.
+				<h3 class="font-bold text-sm text-[#242D21]">Lokasi Strategis Takalar</h3>
+				<p class="text-xs text-[#6B5E45] leading-relaxed">
+					Berada di kawasan pusat Pattallassang Kabupaten Takalar, dekat dengan jalan poros utama yang mudah dijangkau kapan pun.
 				</p>
 			</div>
 		</div>
-	</div>
+	</section>
+
+	<!-- ================= 5. CALL TO ACTION BANNER MEWAH ================= -->
+	<section class="rounded-3xl bg-gradient-to-r from-[#242D21] via-[#2F3A2B] to-[#242D21] border border-[#485943] text-white p-8 sm:p-12 text-center shadow-xl relative overflow-hidden">
+		<div class="relative z-10 max-w-2xl mx-auto space-y-4">
+			<span class="px-3 py-1 rounded-full bg-[#C2A649]/20 text-[#E5C772] text-[11px] font-mono font-bold border border-[#C2A649]/40 inline-block">
+				Pendaftaran Online Cepat & Praktis
+			</span>
+			<h2 class="text-2xl sm:text-3xl font-extrabold text-white">
+				Titipkan Kendaraan Anda di GARTA Takalar Hari Ini
+			</h2>
+			<p class="text-xs sm:text-sm text-[#C2CFC0] leading-relaxed">
+				Daftarkan akun Anda dalam 1 menit, pilih slot garasi yang diinginkan, dan nikmati ketenangan penitipan bergaransi resmi.
+			</p>
+			<div class="pt-4 flex flex-wrap items-center justify-center gap-3">
+				<a
+					href="/auth/register"
+					class="px-6 py-3 bg-[#E5C772] hover:bg-[#F4DE95] text-[#1E251B] font-bold rounded-xl text-xs sm:text-sm transition-all shadow-md btn-interactive"
+				>
+					Daftar Akun Penyewa Baru
+				</a>
+				<a
+					href="/auth/login"
+					class="px-6 py-3 bg-[#384634] hover:bg-[#455541] text-[#E0E9DE] font-semibold rounded-xl text-xs sm:text-sm transition-all border border-[#52664D] shadow-xs btn-interactive"
+				>
+					Sudah Punya Akun? Masuk
+				</a>
+			</div>
+		</div>
+	</section>
 </div>

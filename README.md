@@ -1,4 +1,4 @@
-# SIM-GARASI — Sistem Informasi Persewaan Garasi & Penitipan Kendaraan
+# GARTA — Garasi Takalar (Sistem Smart Safe Garage & EV Hub)
 
 [![SvelteKit 5](https://img.shields.io/badge/SvelteKit-5-orange.svg)](https://svelte.dev)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.9-blue.svg)](https://www.typescriptlang.org)
@@ -16,7 +16,7 @@ Proyek Uji Kompetensi Skema Sertifikasi Pemrogram (Nomor Skema: `IMT.01.15/SSK/L
 ---
 
 ## 📋 Deskripsi Proyek
-**SIM-GARASI** adalah aplikasi web berbasis basis data relasional untuk mengelola operasional penyewaan tempat/slot garasi dan penitipan kendaraan secara harian maupun bulanan. Sistem mengelola tiga kategori unit garasi terstandarisasi:
+**GARTA (Garasi Takalar)** adalah platform web cerdas berbasis basis data relasional untuk mengelola operasional penyewaan tempat/slot garasi aman dan penitipan kendaraan di Kabupaten Takalar, baik secara harian maupun bulanan. Sistem mengelola tiga kategori unit garasi terstandarisasi:
 1. **Garasi Sepeda & Sepeda Motor (Kode Prefix `S...`):** Khusus roda dua (sepeda gowes dan sepeda motor).
 2. **Garasi Mobil Bensin (Kode Prefix `C...`):** Untuk kendaraan roda empat konvensional (bensin/diesel).
 3. **Garasi Mobil Listrik EV (Kode Prefix `E...`):** Dilengkapi fasilitas pengisian daya baterai (*AC Wallbox Charging Station*).
