@@ -14,8 +14,7 @@ import {
 	BicycleGarage,
 	CarGarage,
 	ElectricCarGarage,
-	type Garage,
-	type GarageType
+	type Garage
 } from '#lib/server/domain/Garage.js';
 import { RentalCalculator } from '#lib/server/domain/RentalCalculator.js';
 
@@ -32,25 +31,41 @@ export const load: PageServerLoad = async ({ locals }) => {
 		return {
 			notApproved: true,
 			userStatus: locals.user.status,
-			availableGarages: [],
+			garages: [],
 			today: new Date().toISOString().split('T')[0]
 		};
 	}
 
 	const today = new Date().toISOString().split('T')[0];
 
-	// Ambil semua garasi yang berstatus available
-	const availableGarages = db.prepare(`
-		SELECT id, code, type, daily_price, electricity_price_kwh, status
-		FROM garages
-		WHERE status = 'available'
-		ORDER BY type, code ASC
+	// Ambil seluruh unit garasi/kendaraan beserta jadwal sewa aktifnya (tanggal mulai s/d tanggal selesai)
+	const garages = db.prepare(`
+		SELECT 
+			g.*,
+			(
+				SELECT r.start_date FROM rentals r 
+				WHERE r.garage_id = g.id AND r.status = 'active'
+				ORDER BY r.end_date DESC LIMIT 1
+			) as active_start_date,
+			(
+				SELECT r.end_date FROM rentals r 
+				WHERE r.garage_id = g.id AND r.status = 'active'
+				ORDER BY r.end_date DESC LIMIT 1
+			) as active_end_date,
+			(
+				SELECT u.name FROM rentals r 
+				JOIN users u ON r.user_id = u.id
+				WHERE r.garage_id = g.id AND r.status = 'active'
+				ORDER BY r.end_date DESC LIMIT 1
+			) as active_tenant_name
+		FROM garages g
+		ORDER BY g.type, g.code ASC
 	`).all() as any[];
 
 	return {
 		notApproved: false,
 		userStatus: locals.user.status,
-		availableGarages,
+		garages,
 		today
 	};
 };
@@ -62,10 +77,6 @@ export const actions: Actions = {
 		}
 
 		const data = await request.formData();
-		const vehicleType = data.get('vehicleType')?.toString();
-		const vehicleBrandModel = data.get('vehicleBrandModel')?.toString().trim();
-		const licensePlate = data.get('licensePlate')?.toString().trim() || null;
-		const batteryCapacity = parseFloat(data.get('batteryCapacity')?.toString() || '0');
 		const rentalType = data.get('rentalType')?.toString() as 'harian' | 'bulanan';
 		const duration = parseInt(data.get('duration')?.toString() || '1', 10);
 		const garageId = parseInt(data.get('garageId')?.toString() || '0', 10);
@@ -74,18 +85,34 @@ export const actions: Actions = {
 		const today = new Date().toISOString().split('T')[0];
 
 		// Validasi dasar
-		if (!vehicleType || !vehicleBrandModel || !rentalType || !garageId) {
-			return fail(400, { error: 'Semua kolom formulir yang wajib harus diisi' });
+		if (!rentalType || !garageId) {
+			return fail(400, { error: 'Silakan pilih unit kendaraan dan tentukan durasi sewa' });
 		}
 
-		// Validasi Garasi dari DB
+		// Validasi Unit dari DB
 		const rawGarage = db.prepare('SELECT * FROM garages WHERE id = ?').get(garageId) as any;
 		if (!rawGarage) {
-			return fail(404, { error: 'Garasi yang dipilih tidak ditemukan' });
+			return fail(404, { error: 'Unit kendaraan yang dipilih tidak ditemukan' });
 		}
-		if (rawGarage.status !== 'available') {
-			return fail(400, { error: 'Garasi ini baru saja disewa dan sudah tidak tersedia' });
+
+		// Validasi apakah mobil/motor sedang aktif dirental
+		const activeRental = db.prepare(`
+			SELECT id, start_date, end_date FROM rentals 
+			WHERE garage_id = ? AND status = 'active' 
+			LIMIT 1
+		`).get(garageId) as any;
+
+		if (rawGarage.status !== 'available' || activeRental) {
+			const rangeText = activeRental ? ` (Periode sewa aktif: ${activeRental.start_date} s/d ${activeRental.end_date})` : '';
+			return fail(400, {
+				error: `Unit ${rawGarage.code} (${rawGarage.vehicle_name}) sedang dirental${rangeText} dan tidak dapat dirental lagi.`
+			});
 		}
+
+		const vehicleBrandModel = rawGarage.vehicle_name || `${rawGarage.car_type || 'Kendaraan'} ${rawGarage.code}`;
+		const licensePlate = rawGarage.license_plate || null;
+		const vehicleType = rawGarage.type === 'sepeda' && licensePlate ? 'sepeda_motor' : rawGarage.type;
+		const batteryCapacity = rawGarage.battery_capacity_kwh || 0;
 
 		// Bentuk objek Domain OOP Vehicle
 		let vehicleObj: Vehicle;
@@ -93,17 +120,12 @@ export const actions: Actions = {
 			if (vehicleType === 'sepeda') {
 				vehicleObj = new Bicycle(vehicleBrandModel);
 			} else if (vehicleType === 'sepeda_motor') {
-				if (!licensePlate) throw new Error('Sepeda motor wajib memiliki nomor plat');
-				vehicleObj = new Motorcycle(vehicleBrandModel, licensePlate);
+				vehicleObj = new Motorcycle(vehicleBrandModel, licensePlate || 'B 0000 XX');
 			} else if (vehicleType === 'mobil') {
-				if (!licensePlate) throw new Error('Mobil wajib memiliki nomor plat');
-				vehicleObj = new GasolineCar(vehicleBrandModel, licensePlate);
+				vehicleObj = new GasolineCar(vehicleBrandModel, licensePlate || 'B 0000 XX');
 			} else if (vehicleType === 'mobil_listrik') {
-				if (!licensePlate) throw new Error('Mobil listrik wajib memiliki nomor plat');
-				if (isNaN(batteryCapacity) || batteryCapacity <= 0) {
-					throw new Error('Kapasitas baterai mobil listrik harus lebih dari 0 kWh');
-				}
-				vehicleObj = new ElectricCar(vehicleBrandModel, licensePlate, batteryCapacity);
+				const cap = batteryCapacity > 0 ? batteryCapacity : 58;
+				vehicleObj = new ElectricCar(vehicleBrandModel, licensePlate || 'B 0000 EV', cap);
 			} else {
 				throw new Error('Tipe kendaraan tidak valid');
 			}
@@ -140,8 +162,8 @@ export const actions: Actions = {
 			return fail(400, { error: err.message });
 		}
 
-		// Proses bukti pembayaran (file to base64 atau data URL placeholder)
-		let paymentProofDataUrl = 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="200" height="100"><rect width="200" height="100" fill="%2322c55e"/><text x="10" y="55" fill="white">BUKTI BAYAR LUNAS</text></svg>';
+		// Proses bukti pembayaran
+		let paymentProofDataUrl = 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="200" height="100"><rect width="200" height="100" fill="%2371856A"/><text x="10" y="55" fill="white" font-weight="bold">BUKTI BAYAR LUNAS</text></svg>';
 
 		if (proofFile && proofFile.size > 0) {
 			const buffer = await proofFile.arrayBuffer();
@@ -151,7 +173,7 @@ export const actions: Actions = {
 
 		const now = new Date().toISOString();
 
-		// Simpan sewa ke database dan ubah status garasi menjadi 'used' dalam transaksi
+		// Simpan sewa ke database dan ubah status garasi menjadi 'used' (tersewa)
 		const insertRental = db.prepare(`
 			INSERT INTO rentals (
 				user_id, garage_id, vehicle_type, license_plate, vehicle_brand_model,
@@ -164,7 +186,7 @@ export const actions: Actions = {
 			UPDATE garages SET status = 'used' WHERE id = ?
 		`);
 
-		// Eksekusi
+		// Eksekusi insert sewa dan update status garasi menjadi 'used'
 		insertRental.run(
 			locals.user.id,
 			garageObj.id,

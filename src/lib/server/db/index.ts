@@ -40,9 +40,12 @@ export function initDb() {
 				id INTEGER PRIMARY KEY AUTOINCREMENT,
 				code TEXT NOT NULL UNIQUE,
 				type TEXT NOT NULL CHECK(type IN ('sepeda', 'mobil', 'mobil_listrik')),
+				vehicle_name TEXT NOT NULL DEFAULT 'Kendaraan',
+				license_plate TEXT,
 				car_type TEXT DEFAULT 'Standar',
 				daily_price REAL NOT NULL CHECK(daily_price > 0),
 				electricity_price_kwh REAL DEFAULT 0 CHECK(electricity_price_kwh >= 0),
+				battery_capacity_kwh REAL DEFAULT 0 CHECK(battery_capacity_kwh >= 0),
 				status TEXT NOT NULL CHECK(status IN ('available', 'used')),
 				created_at TEXT NOT NULL
 			);
@@ -80,12 +83,19 @@ export function initDb() {
 		`);
 	}
 
-	// Migrasi aman untuk menambahkan car_type jika tabel sudah ada sebelumnya
+	// Migrasi aman untuk menambahkan kolom baru jika tabel sudah ada sebelumnya
 	try {
 		db.exec(`ALTER TABLE garages ADD COLUMN car_type TEXT DEFAULT 'Standar';`);
-	} catch (e) {
-		// Kolom car_type sudah ada
-	}
+	} catch (e) {}
+	try {
+		db.exec(`ALTER TABLE garages ADD COLUMN vehicle_name TEXT DEFAULT 'Kendaraan';`);
+	} catch (e) {}
+	try {
+		db.exec(`ALTER TABLE garages ADD COLUMN license_plate TEXT DEFAULT NULL;`);
+	} catch (e) {}
+	try {
+		db.exec(`ALTER TABLE garages ADD COLUMN battery_capacity_kwh REAL DEFAULT 0;`);
+	} catch (e) {}
 
 	seedInitialData();
 }
@@ -123,25 +133,25 @@ export function seedInitialData(force = false) {
 	const garageCount = db.prepare('SELECT COUNT(*) as count FROM garages').get() as { count: number };
 	if (garageCount.count === 0) {
 		const insertGarage = db.prepare(`
-			INSERT INTO garages (code, type, car_type, daily_price, electricity_price_kwh, status, created_at)
-			VALUES (?, ?, ?, ?, ?, ?, ?)
+			INSERT INTO garages (code, type, vehicle_name, license_plate, car_type, daily_price, electricity_price_kwh, battery_capacity_kwh, status, created_at)
+			VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
 		`);
 
-		// Garasi Sepeda & Motor (Kode S...) - Tarif Sepeda Motor: 125rb per hari
-		insertGarage.run('S001', 'sepeda', 'Sepeda Motor Matic / Bebek (Vario, Beat)', 125000, 0, 'used', now);
-		insertGarage.run('S002', 'sepeda', 'Sepeda Motor Sport / Maxi (NMax, PCX, CBR)', 125000, 0, 'available', now);
-		insertGarage.run('S003', 'sepeda', 'Sepeda Motor Trail / Gowes (CRF, Polygon)', 125000, 0, 'available', now);
+		// Garasi Sepeda & Sepeda Motor (Kode S...) - Tarif Sepeda Motor: 125rb per hari
+		insertGarage.run('S001', 'sepeda', 'Honda Vario 160 ABS', 'L 9876 XYZ', 'Sepeda Motor Matic', 125000, 0, 0, 'used', now);
+		insertGarage.run('S002', 'sepeda', 'Yamaha NMax 155 Connected', 'B 4567 NMX', 'Sepeda Motor Maxi', 125000, 0, 0, 'available', now);
+		insertGarage.run('S003', 'sepeda', 'Honda CRF 150L Trail', 'W 3456 CRF', 'Sepeda Motor Trail', 125000, 0, 0, 'available', now);
 
 		// Garasi Mobil (Kode C...) - Tarif Mobil: 500rb s/d 1jt per hari
-		insertGarage.run('C001', 'mobil', 'City Car / Hatchback (Honda Brio, Toyota Yaris)', 500000, 0, 'used', now);
-		insertGarage.run('C002', 'mobil', 'MPV Keluarga (Toyota Avanza, Mitsubishi Xpander)', 650000, 0, 'used', now);
-		insertGarage.run('C003', 'mobil', 'Medium SUV / Crossover (Honda HR-V, Hyundai Creta)', 750000, 0, 'available', now);
-		insertGarage.run('C004', 'mobil', 'Executive Sedan / Luxury SUV (Toyota Camry, Fortuner)', 1000000, 0, 'available', now);
+		insertGarage.run('C001', 'mobil', 'Toyota Avanza 1.5G', 'L 1234 AB', 'MPV Keluarga', 500000, 0, 0, 'used', now);
+		insertGarage.run('C002', 'mobil', 'Mitsubishi Xpander Ultimate', 'N 9999 CD', 'MPV Keluarga', 650000, 0, 0, 'used', now);
+		insertGarage.run('C003', 'mobil', 'Honda HR-V SE 1.5 CVT', 'B 2345 HRV', 'Medium SUV', 750000, 0, 0, 'available', now);
+		insertGarage.run('C004', 'mobil', 'Toyota Camry 2.5 V Luxury', 'B 1000 CMR', 'Executive Sedan', 1000000, 0, 0, 'available', now);
 
 		// Garasi Mobil Listrik (Kode E...) - Dilengkapi SPKLU AC Wallbox
-		insertGarage.run('E001', 'mobil_listrik', 'Crossover EV (Hyundai Ioniq 5, Kona EV)', 750000, 2500, 'used', now);
-		insertGarage.run('E002', 'mobil_listrik', 'Performance EV Sedan (BYD Seal Performance)', 850000, 2500, 'available', now);
-		insertGarage.run('E003', 'mobil_listrik', 'Flagship Luxury EV (Kia EV9, BMW iX)', 1000000, 2500, 'available', now);
+		insertGarage.run('E001', 'mobil_listrik', 'Hyundai Ioniq 5 Signature', 'B 5678 EV', 'Crossover EV', 750000, 2500, 58, 'used', now);
+		insertGarage.run('E002', 'mobil_listrik', 'BYD Seal Performance AWD', 'B 3456 BYD', 'Performance EV Sedan', 850000, 2500, 82, 'available', now);
+		insertGarage.run('E003', 'mobil_listrik', 'Kia EV9 GT-Line AWD', 'B 9999 KIA', 'Flagship Luxury EV', 1000000, 2500, 99.8, 'available', now);
 
 		// Ambil User Budi & Garasi-garasi untuk membuat transaksi sampel
 		const budiUser = db.prepare('SELECT id FROM users WHERE email = ?').get('budi@gmail.com') as { id: number };

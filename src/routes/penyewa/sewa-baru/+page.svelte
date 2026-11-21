@@ -5,40 +5,35 @@
 
 	let { data, form }: { data: PageData; form: ActionData } = $props();
 
-	// Form State
-	let vehicleType = $state<'sepeda' | 'sepeda_motor' | 'mobil' | 'mobil_listrik'>('mobil');
-	let vehicleBrandModel = $state('Toyota Avanza 1.5G');
-	let licensePlate = $state('B 1234 ABC');
-	let batteryCapacity = $state<number>(60);
+	// Kategori filter kendaraan
+	let vehicleCategory = $state<'sepeda' | 'mobil' | 'mobil_listrik'>('mobil');
 	let rentalType = $state<'harian' | 'bulanan'>('harian');
 	let duration = $state<number>(3);
 	let selectedGarageId = $state<number | null>(null);
 
-	// Logika filter garasi yang kompatibel dengan kendaraan
-	let compatibleGarageTypes = $derived.by(() => {
-		if (vehicleType === 'sepeda' || vehicleType === 'sepeda_motor') {
-			return ['sepeda'];
-		}
-		if (vehicleType === 'mobil') {
-			return ['mobil'];
-		}
-		if (vehicleType === 'mobil_listrik') {
-			return ['mobil', 'mobil_listrik'];
-		}
-		return [];
+	// Filter unit garasi sesuai kategori kendaraan yang dipilih
+	let filteredGarages = $derived.by(() => {
+		return data.garages.filter((g: any) => {
+			if (vehicleCategory === 'sepeda') {
+				return g.type === 'sepeda';
+			}
+			if (vehicleCategory === 'mobil') {
+				return g.type === 'mobil';
+			}
+			if (vehicleCategory === 'mobil_listrik') {
+				return g.type === 'mobil_listrik' || g.type === 'mobil';
+			}
+			return true;
+		});
 	});
 
-	// Garasi yang kompatibel & tersedia
-	let filteredGarages = $derived(
-		data.availableGarages.filter((g: any) => compatibleGarageTypes.includes(g.type))
-	);
-
-	// Auto-select garasi pertama jika garasi yang dipilih sebelumnya tidak ada di daftar filter
+	// Auto-select unit pertama yang berstatus 'available' saat kategori berubah
 	$effect(() => {
-		if (filteredGarages.length > 0) {
-			const exists = filteredGarages.some((g: any) => g.id === selectedGarageId);
-			if (!exists) {
-				selectedGarageId = filteredGarages[0].id;
+		const availableUnits = filteredGarages.filter((g: any) => g.status === 'available');
+		if (availableUnits.length > 0) {
+			const currentSelected = availableUnits.find((g: any) => g.id === selectedGarageId);
+			if (!currentSelected) {
+				selectedGarageId = availableUnits[0].id;
 			}
 		} else {
 			selectedGarageId = null;
@@ -46,7 +41,7 @@
 	});
 
 	let selectedGarage = $derived(
-		data.availableGarages.find((g: any) => g.id === selectedGarageId) ?? null
+		data.garages.find((g: any) => g.id === selectedGarageId) ?? null
 	);
 
 	// Hitung Tanggal Selesai otomatis
@@ -64,7 +59,7 @@
 		return end.toISOString().split('T')[0];
 	});
 
-	// Hitung Biaya Real-time
+	// Hitung Biaya Real-time sesuai tarif unit yang dipilih
 	let costCalculation = $derived.by(() => {
 		if (!selectedGarage) {
 			return { baseCost: 0, electricityCost: 0, totalCost: 0 };
@@ -77,9 +72,9 @@
 		const baseCost = rentalType === 'harian' ? dur * dailyPrice : dur * monthlyPrice;
 
 		let electricityCost = 0;
-		if (vehicleType === 'mobil_listrik' && selectedGarage.type === 'mobil_listrik') {
-			const kwh = Math.max(0, batteryCapacity || 0);
-			electricityCost = kwh * (selectedGarage.electricity_price_kwh || 0);
+		if (selectedGarage.type === 'mobil_listrik') {
+			const kwh = Math.max(0, selectedGarage.battery_capacity_kwh || 58);
+			electricityCost = kwh * (selectedGarage.electricity_price_kwh || 2500);
 		}
 
 		return {
@@ -95,7 +90,7 @@
 </script>
 
 <svelte:head>
-	<title>Formulir Sewa Baru - SIM-GARASI</title>
+	<title>Sewa Kendaraan & Garasi - SIM-GARASI</title>
 </svelte:head>
 
 <div class="max-w-4xl mx-auto py-2 space-y-6">
@@ -104,11 +99,11 @@
 		<div>
 			<div class="flex items-center gap-2 text-xs font-bold text-[#71856A] uppercase tracking-wider">
 				<Icon name="file-text" size={14} />
-				<span>Modul Transaksi Penyewa Terverifikasi</span>
+				<span>Modul Pemesanan Sewa Kendaraan</span>
 			</div>
-			<h1 class="text-xl font-extrabold text-[#383123] mt-1">Formulir Sewa Garasi Baru</h1>
+			<h1 class="text-xl font-extrabold text-[#383123] mt-1">Formulir Sewa Mobil & Motor</h1>
 			<p class="text-xs text-[#6B5E45] mt-0.5 leading-relaxed">
-				Sistem akan menyaring garasi yang kompatibel secara otomatis dan menghitung biaya sesuai regulasi bisnis.
+				Pilih kategori kendaraan, tentukan durasi, dan pilih unit mobil/motor yang siap dirental dari garasi kami.
 			</p>
 		</div>
 
@@ -149,183 +144,58 @@
 		{/if}
 
 		<form method="POST" action="?/submitRental" enctype="multipart/form-data" class="space-y-6">
-			<!-- Bagian 1: Data Kendaraan & Visual Selector -->
-			<div class="bg-white rounded-xl border border-[#DFD5C2] p-6 shadow-xs space-y-5 card-hover">
+			<!-- Bagian 1: Pilih Kategori Kendaraan -->
+			<div class="bg-white rounded-xl border border-[#DFD5C2] p-6 shadow-xs space-y-4 card-hover">
 				<div class="border-b border-[#F4EFE7] pb-3 flex items-center justify-between">
 					<h2 class="text-xs font-bold text-[#383123] uppercase tracking-wider flex items-center gap-2">
 						<Icon name="car" size={15} class="text-[#71856A]" />
-						<span>1. Identitas & Jenis Kendaraan</span>
+						<span>1. Pilih Kategori Kendaraan</span>
 					</h2>
-					<span class="text-[11px] text-[#A08F6E]">Validasi Kompatibilitas Otomatis</span>
+					<span class="text-[11px] text-[#A08F6E]">Data Unit Otomatis Terhubung dari Admin</span>
 				</div>
 
-				<!-- Interactive Vehicle Category Selector Cards -->
-				<div>
-					<span class="block text-xs font-bold text-[#4F4532] mb-2">
-						Pilih Jenis Kendaraan <span class="text-rose-600">*</span>
-					</span>
-					<div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
-						<button
-							type="button"
-							onclick={() => {
-								vehicleType = 'sepeda';
-								vehicleBrandModel = 'Polygon Cascade 4';
-								licensePlate = '';
-							}}
-							class="p-3.5 rounded-xl border text-left transition-all btn-interactive flex flex-col justify-between {vehicleType === 'sepeda' ? 'bg-[#EFF3ED] border-[#71856A] text-[#2E382A] ring-2 ring-[#71856A]' : 'bg-[#FAF8F4] border-[#DFD5C2] text-[#6B5E45] hover:bg-[#F4EFE7]'}"
-						>
-							<div class="w-8 h-8 rounded-lg bg-white text-[#71856A] flex items-center justify-center border border-[#DFE5DC]">
-								<Icon name="bike" size={16} />
-							</div>
-							<div class="mt-2">
-								<div class="font-bold text-xs">Sepeda (Gowes)</div>
-								<div class="text-[10px] text-[#71856A]">Garasi S (Bebas Plat)</div>
-							</div>
-						</button>
-
-						<button
-							type="button"
-							onclick={() => {
-								vehicleType = 'sepeda_motor';
-								vehicleBrandModel = 'Honda Vario 160';
-								if (!licensePlate) licensePlate = 'L 4567 CD';
-							}}
-							class="p-3.5 rounded-xl border text-left transition-all btn-interactive flex flex-col justify-between {vehicleType === 'sepeda_motor' ? 'bg-[#EFF3ED] border-[#71856A] text-[#2E382A] ring-2 ring-[#71856A]' : 'bg-[#FAF8F4] border-[#DFD5C2] text-[#6B5E45] hover:bg-[#F4EFE7]'}"
-						>
-							<div class="w-8 h-8 rounded-lg bg-white text-[#71856A] flex items-center justify-center border border-[#DFE5DC]">
-								<Icon name="bike" size={16} />
-							</div>
-							<div class="mt-2">
-								<div class="font-bold text-xs">Sepeda Motor</div>
-								<div class="text-[10px] text-[#71856A]">Garasi S (Wajib Plat)</div>
-							</div>
-						</button>
-
-						<button
-							type="button"
-							onclick={() => {
-								vehicleType = 'mobil';
-								vehicleBrandModel = 'Toyota Avanza 1.5G';
-								if (!licensePlate) licensePlate = 'B 1234 ABC';
-							}}
-							class="p-3.5 rounded-xl border text-left transition-all btn-interactive flex flex-col justify-between {vehicleType === 'mobil' ? 'bg-[#EFF3ED] border-[#71856A] text-[#2E382A] ring-2 ring-[#71856A]' : 'bg-[#FAF8F4] border-[#DFD5C2] text-[#6B5E45] hover:bg-[#F4EFE7]'}"
-						>
-							<div class="w-8 h-8 rounded-lg bg-white text-[#877758] flex items-center justify-center border border-[#DFE5DC]">
-								<Icon name="car" size={16} />
-							</div>
-							<div class="mt-2">
-								<div class="font-bold text-xs">Mobil Bensin</div>
-								<div class="text-[10px] text-[#877758]">Garasi C (Wajib Plat)</div>
-							</div>
-						</button>
-
-						<button
-							type="button"
-							onclick={() => {
-								vehicleType = 'mobil_listrik';
-								vehicleBrandModel = 'Hyundai Ioniq 5 Signature';
-								if (!licensePlate) licensePlate = 'B 5678 EV';
-								if (!batteryCapacity) batteryCapacity = 60;
-							}}
-							class="p-3.5 rounded-xl border text-left transition-all btn-interactive flex flex-col justify-between {vehicleType === 'mobil_listrik' ? 'bg-[#EFF3ED] border-[#71856A] text-[#2E382A] ring-2 ring-[#71856A]' : 'bg-[#FAF8F4] border-[#DFD5C2] text-[#6B5E45] hover:bg-[#F4EFE7]'}"
-						>
-							<div class="w-8 h-8 rounded-lg bg-white text-[#596A53] flex items-center justify-center border border-[#DFE5DC]">
-								<Icon name="zap" size={16} />
-							</div>
-							<div class="mt-2">
-								<div class="font-bold text-xs">Mobil Listrik (EV)</div>
-								<div class="text-[10px] text-[#596A53]">Garasi C atau E</div>
-							</div>
-						</button>
-					</div>
-
-					<input type="hidden" name="vehicleType" value={vehicleType} />
-				</div>
-
-				<div class="grid grid-cols-1 md:grid-cols-2 gap-4 pt-1">
-					<div>
-						<label for="vehicleBrandModel" class="block text-xs font-bold text-[#4F4532] mb-1">
-							Merek dan Tipe Kendaraan <span class="text-rose-600">*</span>
-						</label>
-						<input
-							type="text"
-							id="vehicleBrandModel"
-							name="vehicleBrandModel"
-							bind:value={vehicleBrandModel}
-							required
-							placeholder="Contoh: Toyota Avanza / Polygon Cascade / Ioniq 5"
-							class="w-full px-3.5 py-2 text-xs border border-[#DFD5C2] rounded-lg input-focus bg-[#FCFAF4] font-medium"
-						/>
-					</div>
-
-					<div>
-						<label for="licensePlate" class="block text-xs font-bold text-[#4F4532] mb-1">
-							Nomor Plat Polisi {#if vehicleType === 'sepeda'}<span class="text-[#A08F6E] font-normal">(Tidak wajib untuk sepeda)</span>{:else}<span class="text-rose-600">* Wajib</span>{/if}
-						</label>
-						<input
-							type="text"
-							id="licensePlate"
-							name="licensePlate"
-							bind:value={licensePlate}
-							disabled={vehicleType === 'sepeda'}
-							required={vehicleType !== 'sepeda'}
-							placeholder={vehicleType === 'sepeda' ? 'Bebas tanpa plat polisi' : 'Contoh: B 1234 ABC'}
-							class="w-full px-3.5 py-2 text-xs border border-[#DFD5C2] rounded-lg input-focus disabled:bg-[#FAF8F4] disabled:text-[#BEB092] font-mono uppercase bg-[#FCFAF4] font-medium"
-						/>
-					</div>
-
-					{#if vehicleType === 'mobil_listrik'}
-						<div class="md:col-span-2 bg-[#EFF3ED] border border-[#C2CCBC] p-4 rounded-xl space-y-2">
-							<div class="flex items-center justify-between">
-								<label for="batteryCapacity" class="block text-xs font-bold text-[#2E382A]">
-									Kapasitas Baterai Listrik (kWh) <span class="text-rose-600">*</span>
-								</label>
-								<span class="text-[11px] font-mono font-bold text-[#596A53] bg-white px-2.5 py-0.5 rounded-md border border-[#DFE5DC]">
-									Wajib 100% Full Charge di Garasi E
-								</span>
-							</div>
-							<div class="flex items-center gap-3">
-								<input
-									type="number"
-									id="batteryCapacity"
-									name="batteryCapacity"
-									bind:value={batteryCapacity}
-									min="1"
-									max="200"
-									step="0.5"
-									required
-									class="w-32 px-3 py-1.5 text-xs border border-[#71856A] rounded-lg bg-white font-mono font-bold text-[#2E382A]"
-								/>
-								<span class="text-xs font-bold text-[#596A53]">kWh</span>
-								<div class="flex gap-2">
-									<button
-										type="button"
-										onclick={() => (batteryCapacity = 26.7)}
-										class="px-2 py-1 text-[10px] bg-white rounded border border-[#DFE5DC] text-[#4F4532] hover:bg-[#F4EFE7]"
-									>
-										Air EV (26.7 kWh)
-									</button>
-									<button
-										type="button"
-										onclick={() => (batteryCapacity = 58)}
-										class="px-2 py-1 text-[10px] bg-white rounded border border-[#DFE5DC] text-[#4F4532] hover:bg-[#F4EFE7]"
-									>
-										Ioniq 5 (58 kWh)
-									</button>
-									<button
-										type="button"
-										onclick={() => (batteryCapacity = 82)}
-										class="px-2 py-1 text-[10px] bg-white rounded border border-[#DFE5DC] text-[#4F4532] hover:bg-[#F4EFE7]"
-									>
-										BYD Seal (82 kWh)
-									</button>
-								</div>
-							</div>
-							<p class="text-[11px] text-[#596A53]">
-								Sesuai aturan SKKNI: Jika memilih unit Garasi E (Mobil Listrik), sistem otomatis menagih biaya pengisian baterai 100% kapasitas dikalikan tarif kWh garasi.
-							</p>
+				<div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+					<button
+						type="button"
+						onclick={() => (vehicleCategory = 'sepeda')}
+						class="p-4 rounded-xl border text-left transition-all btn-interactive flex items-center gap-3 {vehicleCategory === 'sepeda' ? 'bg-[#EFF3ED] border-[#71856A] text-[#2E382A] ring-2 ring-[#71856A]' : 'bg-[#FAF8F4] border-[#DFD5C2] text-[#6B5E45] hover:bg-[#F4EFE7]'}"
+					>
+						<div class="w-10 h-10 rounded-lg bg-white text-[#71856A] flex items-center justify-center border border-[#DFE5DC] shrink-0">
+							<Icon name="bike" size={20} />
 						</div>
-					{/if}
+						<div>
+							<div class="font-bold text-xs sm:text-sm">Sepeda & Sepeda Motor</div>
+							<div class="text-[11px] text-[#71856A] font-semibold mt-0.5">Mulai Rp 125.000 / hari</div>
+						</div>
+					</button>
+
+					<button
+						type="button"
+						onclick={() => (vehicleCategory = 'mobil')}
+						class="p-4 rounded-xl border text-left transition-all btn-interactive flex items-center gap-3 {vehicleCategory === 'mobil' ? 'bg-[#EFF3ED] border-[#71856A] text-[#2E382A] ring-2 ring-[#71856A]' : 'bg-[#FAF8F4] border-[#DFD5C2] text-[#6B5E45] hover:bg-[#F4EFE7]'}"
+					>
+						<div class="w-10 h-10 rounded-lg bg-white text-[#877758] flex items-center justify-center border border-[#DFE5DC] shrink-0">
+							<Icon name="car" size={20} />
+						</div>
+						<div>
+							<div class="font-bold text-xs sm:text-sm">Mobil (Bensin / Diesel)</div>
+							<div class="text-[11px] text-[#877758] font-semibold mt-0.5">Rp 500.000 - Rp 1.000.000 / hari</div>
+						</div>
+					</button>
+
+					<button
+						type="button"
+						onclick={() => (vehicleCategory = 'mobil_listrik')}
+						class="p-4 rounded-xl border text-left transition-all btn-interactive flex items-center gap-3 {vehicleCategory === 'mobil_listrik' ? 'bg-[#EFF3ED] border-[#71856A] text-[#2E382A] ring-2 ring-[#71856A]' : 'bg-[#FAF8F4] border-[#DFD5C2] text-[#6B5E45] hover:bg-[#F4EFE7]'}"
+					>
+						<div class="w-10 h-10 rounded-lg bg-white text-[#596A53] flex items-center justify-center border border-[#DFE5DC] shrink-0">
+							<Icon name="zap" size={20} />
+						</div>
+						<div>
+							<div class="font-bold text-xs sm:text-sm">Mobil Listrik (EV)</div>
+							<div class="text-[11px] text-[#596A53] font-semibold mt-0.5">Rp 750.000 - Rp 1.000.000 / hari</div>
+						</div>
+					</button>
 				</div>
 			</div>
 
@@ -421,65 +291,105 @@
 				</div>
 			</div>
 
-			<!-- Bagian 3: Pilih Garasi yang Kompatibel & Tersedia -->
+			<!-- Bagian 3: PILIH UNIT KENDARAAN DI GARASI (OTOMATIS DARI ADMIN) -->
 			<div class="bg-white rounded-xl border border-[#DFD5C2] p-6 shadow-xs space-y-4 card-hover">
-				<div class="flex items-center justify-between border-b border-[#F4EFE7] pb-3">
-					<h2 class="text-xs font-bold text-[#383123] uppercase tracking-wider flex items-center gap-2">
-						<Icon name="building" size={15} class="text-[#71856A]" />
-						<span>3. Pilih Unit Garasi Tersedia</span>
-					</h2>
-					<span class="text-xs font-mono font-bold text-[#71856A] bg-[#EFF3ED] px-2.5 py-0.5 rounded-full border border-[#DFE5DC]">
-						{filteredGarages.length} Unit Siap Pakai
+				<div class="flex flex-col sm:flex-row sm:items-center justify-between border-b border-[#F4EFE7] pb-3 gap-2">
+					<div>
+						<h2 class="text-xs font-bold text-[#383123] uppercase tracking-wider flex items-center gap-2">
+							<Icon name="building" size={15} class="text-[#71856A]" />
+							<span>3. Pilih Unit Kendaraan & Garasi</span>
+						</h2>
+						<p class="text-[11px] text-[#6B5E45] mt-0.5">
+							Merek kendaraan dan nomor plat polisi sudah terdaftar otomatis oleh admin. Unit yang sedang dirental tidak dapat dipilih.
+						</p>
+					</div>
+					<span class="text-xs font-mono font-bold text-[#71856A] bg-[#EFF3ED] px-2.5 py-0.5 rounded-full border border-[#DFE5DC] self-start sm:self-auto">
+						{filteredGarages.filter((g: any) => g.status === 'available').length} Unit Tersedia
 					</span>
 				</div>
 
 				{#if filteredGarages.length === 0}
 					<div class="p-8 bg-[#FAF8F4] border border-[#DFD5C2] rounded-xl text-center text-[#877758] text-xs">
-						Tidak ada unit garasi yang cocok ({compatibleGarageTypes.join(', ')}) dengan status tersedia (available) saat ini.
+						Tidak ada unit kendaraan pada kategori ini.
 					</div>
 				{:else}
-					<div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+					<div class="grid grid-cols-1 md:grid-cols-2 gap-4">
 						{#each filteredGarages as garage (garage.id)}
+							{@const isRented = garage.status === 'used' || (garage.active_end_date && garage.active_end_date >= data.today)}
 							<label
-								class="border rounded-xl p-4 cursor-pointer transition-all flex flex-col justify-between btn-interactive {selectedGarageId === garage.id ? 'border-[#71856A] bg-[#EFF3ED] ring-2 ring-[#71856A] shadow-sm' : 'border-[#DFD5C2] hover:border-[#BEB092] bg-[#FAF8F4]'}"
+								class="border rounded-xl p-4.5 transition-all flex flex-col justify-between {isRented ? 'bg-[#FDFBF7] border-[#EAE3D4] opacity-75 cursor-not-allowed' : selectedGarageId === garage.id ? 'border-[#71856A] bg-[#EFF3ED] ring-2 ring-[#71856A] shadow-sm cursor-pointer' : 'border-[#DFD5C2] hover:border-[#BEB092] bg-[#FAF8F4] cursor-pointer'}"
 							>
-								<div class="flex items-center justify-between">
-									<div class="flex items-center gap-2.5">
-										<input
-											type="radio"
-											name="garageId"
-											value={garage.id}
-											bind:group={selectedGarageId}
-											class="text-[#71856A] focus:ring-[#71856A] accent-[#71856A]"
-										/>
-										<span class="font-mono font-extrabold text-base text-[#383123]">{garage.code}</span>
+								<div>
+									<!-- Top Row: Radio + Code + Status Badge -->
+									<div class="flex items-start justify-between gap-2">
+										<div class="flex items-center gap-2.5">
+											<input
+												type="radio"
+												name="garageId"
+												value={garage.id}
+												bind:group={selectedGarageId}
+												disabled={isRented}
+												class="text-[#71856A] focus:ring-[#71856A] accent-[#71856A] disabled:opacity-50"
+											/>
+											<div>
+												<span class="font-mono font-extrabold text-base text-[#383123]">{garage.code}</span>
+												<span class="text-[11px] font-mono text-[#877758] bg-white px-2 py-0.5 rounded border border-[#DFE5DC] ml-1.5 font-bold">
+													{garage.license_plate || 'Bebas Plat'}
+												</span>
+											</div>
+										</div>
+
+										<!-- Status Badge: Available vs Rented with Dates -->
+										{#if isRented}
+											<div class="text-right">
+												<span class="text-[10px] font-mono font-bold px-2 py-0.5 rounded-full bg-rose-50 text-rose-700 border border-rose-200 block">
+													⛔ Sudah Dirental
+												</span>
+												<span class="text-[10px] text-rose-600 font-mono mt-0.5 block">
+													{garage.active_start_date} s/d {garage.active_end_date}
+												</span>
+											</div>
+										{:else}
+											<span class="text-[10px] font-mono font-bold px-2 py-0.5 rounded-full bg-[#EFF3ED] text-[#596A53] border border-[#DFE5DC]">
+												✓ Siap Dirental
+											</span>
+										{/if}
 									</div>
-									<span class="text-[10px] uppercase font-mono font-bold px-2 py-0.5 rounded bg-white text-[#4F4532] border border-[#DFE5DC]">
-										{garage.type.replace('_', ' ')}
-									</span>
+
+									<!-- Middle: Vehicle Brand & Model + Type -->
+									<div class="mt-3 bg-white p-3 rounded-lg border border-[#F4EFE7]">
+										<div class="font-bold text-sm text-[#383123]">
+											{garage.vehicle_name || `${garage.car_type || 'Kendaraan'} ${garage.code}`}
+										</div>
+										<div class="text-xs text-[#6B5E45] mt-0.5 flex items-center justify-between">
+											<span>Tipe: <strong class="text-[#383123]">{garage.car_type || 'Standar'}</strong></span>
+											<span class="capitalize text-[11px] text-[#A08F6E]">{garage.type.replace('_', ' ')}</span>
+										</div>
+										{#if garage.type === 'mobil_listrik'}
+											<div class="text-[11px] text-[#596A53] font-semibold mt-1 flex items-center gap-1">
+												<Icon name="zap" size={12} />
+												<span>Kapasitas Baterai: {garage.battery_capacity_kwh || 58} kWh (Full Charge Ready)</span>
+											</div>
+										{/if}
+									</div>
 								</div>
 
-								{#if garage.car_type}
-									<div class="mt-2 text-[11px] font-sans font-semibold text-[#4F4532]">
-										{garage.car_type}
-									</div>
-								{/if}
-
-								<div class="mt-4 text-xs space-y-1.5 text-[#6B5E45] border-t border-[#EAE3D4] pt-3 font-mono">
+								<!-- Bottom: Pricing -->
+								<div class="mt-3 text-xs space-y-1 text-[#6B5E45] border-t border-[#EAE3D4] pt-2.5 font-mono">
 									<div class="flex justify-between">
 										<span class="text-[#877758] font-sans">Tarif Harian:</span>
 										<span class="font-bold text-[#383123]">{formatRupiah(garage.daily_price)}</span>
 									</div>
 									<div class="flex justify-between">
-										<span class="text-[#877758] font-sans">Tarif Bulanan:</span>
+										<span class="text-[#877758] font-sans">Tarif Bulanan (25x):</span>
 										<span class="font-bold text-[#71856A]">{formatRupiah(garage.daily_price * 25)}</span>
 									</div>
 									{#if garage.type === 'mobil_listrik'}
 										<div class="flex justify-between text-[#596A53] font-semibold pt-1 border-t border-[#DFE5DC]">
 											<span class="font-sans flex items-center gap-1">
-												<Icon name="zap" size={11} /> Listrik:
+												<Icon name="zap" size={11} /> Listrik SPKLU:
 											</span>
-											<span>{formatRupiah(garage.electricity_price_kwh)} / kWh</span>
+											<span>{formatRupiah(garage.electricity_price_kwh || 2500)} / kWh</span>
 										</div>
 									{/if}
 								</div>
@@ -494,9 +404,9 @@
 				<div class="border-b border-[#F4EFE7] pb-3 flex items-center justify-between">
 					<h2 class="text-xs font-bold text-[#383123] uppercase tracking-wider flex items-center gap-2">
 						<Icon name="upload" size={15} class="text-[#71856A]" />
-						<span>4. Pelunasan & Rincian Transaksi Sesuai Standar</span>
+						<span>4. Pelunasan & Rincian Transaksi</span>
 					</h2>
-					<span class="text-[11px] text-[#71856A] font-semibold">Struk Resmi Tercatat</span>
+					<span class="text-[11px] text-[#71856A] font-semibold">Tercatat Otomatis di Sistem</span>
 				</div>
 
 				<div class="grid grid-cols-1 md:grid-cols-2 gap-6 items-center">
@@ -512,28 +422,35 @@
 							class="w-full text-xs text-[#4F4532] file:mr-3 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-xs file:font-bold file:bg-[#EFF3ED] file:text-[#2E382A] hover:file:bg-[#DFE5DC] border border-[#DFD5C2] rounded-xl p-1.5 bg-[#FAF8F4]"
 						/>
 						<p class="text-[11px] text-[#A08F6E] mt-1.5">
-							Format bukti transfer didukung: JPG, PNG, WebP (Maks. 5 MB)
+							Format file: JPG, PNG, WebP (Struk transfer bank / QRIS)
 						</p>
 					</div>
 
-					<!-- Rincian Biaya Bersih Sesuai Domain Calculator -->
+					<!-- Rincian Biaya Bersih -->
 					<div class="bg-[#FAF8F4] border border-[#DFD5C2] rounded-xl p-5 space-y-2.5 text-xs shadow-xs">
 						<div class="text-[#4F4532] font-bold border-b border-[#EAE3D4] pb-2 flex items-center justify-between">
-							<span>Kalkulasi Otomatis Sistem</span>
-							<span class="text-[10px] text-[#71856A] uppercase font-mono">Verified Formula</span>
+							<span>Unit Pilihan Anda</span>
+							<span class="text-[10px] text-[#71856A] uppercase font-mono font-bold">
+								{selectedGarage ? selectedGarage.code : 'Belum dipilih'}
+							</span>
 						</div>
+						{#if selectedGarage}
+							<div class="text-xs text-[#383123] font-bold">
+								{selectedGarage.vehicle_name} <span class="text-[#877758] font-normal font-mono">({selectedGarage.license_plate || 'Bebas Plat'})</span>
+							</div>
+						{/if}
 						<div class="flex justify-between text-[#6B5E45]">
-							<span>Biaya Sewa Unit Garasi:</span>
+							<span>Biaya Sewa ({duration} {rentalType === 'harian' ? 'hari' : 'bulan'}):</span>
 							<span class="font-mono font-bold text-[#383123]">{formatRupiah(costCalculation.baseCost)}</span>
 						</div>
 						{#if costCalculation.electricityCost > 0}
 							<div class="flex justify-between text-[#596A53] pt-1 border-t border-[#EAE3D4]">
-								<span>Charge Baterai ({batteryCapacity} kWh × {formatRupiah(selectedGarage?.electricity_price_kwh || 0)}):</span>
+								<span>Charge EV 100% ({selectedGarage?.battery_capacity_kwh || 58} kWh):</span>
 								<span class="font-mono font-bold">+ {formatRupiah(costCalculation.electricityCost)}</span>
 							</div>
 						{/if}
 						<div class="flex justify-between text-base font-extrabold border-t-2 border-[#DFD5C2] pt-3 text-[#383123]">
-							<span>Total Tagihan Lunas:</span>
+							<span>Total Tagihan Pelunasan:</span>
 							<span class="font-mono text-[#596A53]">{formatRupiah(costCalculation.totalCost)}</span>
 						</div>
 					</div>
@@ -546,7 +463,7 @@
 						class="w-full py-3 bg-[#71856A] hover:bg-[#596A53] disabled:bg-[#BEB092] disabled:cursor-not-allowed text-white font-bold rounded-xl text-xs transition-all shadow-sm flex items-center justify-center gap-2 btn-interactive"
 					>
 						<Icon name="check" size={16} />
-						<span>Simpan dan Konfirmasi Sewa Garasi</span>
+						<span>Konfirmasi & Ajukan Sewa Mobil / Motor</span>
 					</button>
 				</div>
 			</div>
