@@ -1,71 +1,128 @@
 @import 'tailwindcss';
 
 @theme {
-	/* Earth & Olive Brown Palette (Band 1: #877248) */
-	--color-earth-950: #252016;
-	--color-earth-900: #383123;
-	--color-earth-800: #4F4532;
-	--color-earth-700: #6B5E45;
-	--color-earth-600: #877758;
-	--color-earth-500: #A08F6E;
-	--color-earth-400: #BEB092;
-	--color-earth-300: #D8CEB9;
-	--color-earth-200: #EAE3D4;
-	--color-earth-100: #F4EFE7;
-	--color-earth-50: #FAF8F4;
+	/* Dribbble Cyber Automotive Palette (GARTA Smart Safe Garage & EV Hub) */
+	--color-obsidian-950: #07090E;
+	--color-obsidian-900: #0B0F17;
+	--color-obsidian-850: #0F1420;
+	--color-obsidian-800: #141B2B;
+	--color-obsidian-750: #1A2338;
+	--color-obsidian-700: #222D45;
 
-	/* Sage Green Palette (Band 2: #889880) */
-	--color-sage-950: #1E251C;
-	--color-sage-900: #2E382A;
-	--color-sage-800: #424F3D;
-	--color-sage-700: #596A53;
-	--color-sage-600: #71856A;
-	--color-sage-500: #889880;
-	--color-sage-400: #A4B29E;
-	--color-sage-300: #C2CCBC;
-	--color-sage-200: #DFE5DC;
-	--color-sage-100: #EFF3ED;
-	--color-sage-50: #F7FAF6;
+	/* Electric Emerald / Mint (Status Tersedia & Eco EV) */
+	--color-neon-emerald: #10B981;
+	--color-neon-mint: #34D399;
+	--color-neon-cyan: #06B6D4;
 
-	/* Warm Sand & Khaki (Band 4: #DAC99B) */
-	--color-sand-900: #4A3F24;
-	--color-sand-800: #675733;
-	--color-sand-700: #8A7545;
-	--color-sand-600: #B0975C;
-	--color-sand-500: #CBB47C;
-	--color-sand-400: #DAC99B;
-	--color-sand-300: #E6D9B8;
-	--color-sand-200: #F1E9D4;
-	--color-sand-100: #F8F4E8;
-	--color-sand-50: #FCFAF4;
-
-	/* Warm Cream / Ivory Background (Band 3: #EFECE1) */
-	--color-cream-900: #4D473B;
-	--color-cream-800: #736B59;
-	--color-cream-700: #998F79;
-	--color-cream-600: #BEB49D;
-	--color-cream-500: #D7CEB9;
-	--color-cream-400: #E5DEC9;
-	--color-cream-300: #EFE8D6;
-	--color-cream-200: #F4EFE2;
-	--color-cream-100: #F8F5EC;
-	--color-cream-50: #FDFBF7;
+	/* Cyber Amber / Electric Gold (Branding GARTA Takalar) */
+	--color-cyber-gold: #F59E0B;
+	--color-cyber-amber: #FBBF24;
+	--color-cyber-yellow: #FDE047;
 }
 
 /* Custom interactive animations and micro-effects */
 html {
 	scroll-behavior: smooth;
-	accent-color: #71856A;
+	accent-color: #10B981;
 }
 
 body {
-	background-color: #F8F5EC;
-	color: #383123;
+	background-color: #080C14;
+	color: #F1F5F9;
+	font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+	background-image: 
+		radial-gradient(circle at 50% 0%, rgba(16, 185, 129, 0.08) 0%, transparent 50%),
+		radial-gradient(circle at 85% 30%, rgba(245, 158, 11, 0.05) 0%, transparent 40%),
+		radial-gradient(circle at 15% 70%, rgba(6, 182, 212, 0.05) 0%, transparent 40%);
+	background-attachment: fixed;
 }
 
 ::selection {
-	background-color: #DFE5DC;
-	color: #2E382A;
+	background-color: rgba(16, 185, 129, 0.3);
+	color: #FFFFFF;
+}
+
+/* Glassmorphism Classes */
+.glass-panel {
+	background: rgba(15, 20, 32, 0.75);
+	backdrop-filter: blur(16px);
+	-webkit-backdrop-filter: blur(16px);
+	border: 1px solid rgba(255, 255, 255, 0.08);
+	box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+}
+
+.glass-panel-elevated {
+	background: rgba(20, 27, 43, 0.85);
+	backdrop-filter: blur(20px);
+	-webkit-backdrop-filter: blur(20px);
+	border: 1px solid rgba(255, 255, 255, 0.12);
+	box-shadow: 0 12px 40px -4px rgba(0, 0, 0, 0.5), inset 0 1px 0 0 rgba(255, 255, 255, 0.1);
+}
+
+/* Keyframe Animations */
+@keyframes float-slow {
+	0%, 100% {
+		transform: translateY(0px) rotate(0deg);
+	}
+	50% {
+		transform: translateY(-6px) rotate(0.5deg);
+	}
+}
+
+@keyframes pulse-glow {
+	0%, 100% {
+		opacity: 0.4;
+		filter: drop-shadow(0 0 15px rgba(16, 185, 129, 0.4));
+	}
+	50% {
+		opacity: 0.8;
+		filter: drop-shadow(0 0 25px rgba(16, 185, 129, 0.8));
+	}
+}
+
+@keyframes radar-pulse {
+	0% {
+		transform: scale(0.95);
+		box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7);
+	}
+	70% {
+		transform: scale(1);
+		box-shadow: 0 0 0 10px rgba(16, 185, 129, 0);
+	}
+	100% {
+		transform: scale(0.95);
+		box-shadow: 0 0 0 0 rgba(16, 185, 129, 0);
+	}
+}
+
+@keyframes shimmer {
+	0% {
+		background-position: -200% 0;
+	}
+	100% {
+		background-position: 200% 0;
+	}
+}
+
+.animate-float {
+	animation: float-slow 4s ease-in-out infinite;
+}
+
+.animate-radar {
+	animation: radar-pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+.animate-pulse-glow {
+	animation: pulse-glow 3s ease-in-out infinite;
+}
+
+.text-shimmer {
+	background: linear-gradient(90deg, #FFFFFF 0%, #F59E0B 50%, #FFFFFF 100%);
+	background-size: 200% auto;
+	color: transparent;
+	-webkit-background-clip: text;
+	background-clip: text;
+	animation: shimmer 4s linear infinite;
 }
 
 /* Subtle focus ring style */
@@ -74,18 +131,18 @@ body {
 }
 .input-focus:focus {
 	outline: none;
-	border-color: #71856A;
-	box-shadow: 0 0 0 3px rgba(136, 152, 128, 0.25);
+	border-color: #10B981;
+	box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.25);
 }
 
 /* Interactive card hover */
 .card-hover {
-	transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.2s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.2s ease;
+	transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
 }
 .card-hover:hover {
-	transform: translateY(-2px);
-	box-shadow: 0 8px 20px -4px rgba(79, 69, 50, 0.08), 0 4px 6px -2px rgba(79, 69, 50, 0.04);
-	border-color: #C2CCBC;
+	transform: translateY(-4px);
+	box-shadow: 0 16px 32px -8px rgba(0, 0, 0, 0.6), 0 0 20px 2px rgba(16, 185, 129, 0.15);
+	border-color: rgba(16, 185, 129, 0.4);
 }
 
 /* Interactive button press effect */
@@ -93,6 +150,5 @@ body {
 	transition: all 0.15s cubic-bezier(0.16, 1, 0.3, 1);
 }
 .btn-interactive:active {
-	transform: scale(0.98);
+	transform: scale(0.97);
 }
-
