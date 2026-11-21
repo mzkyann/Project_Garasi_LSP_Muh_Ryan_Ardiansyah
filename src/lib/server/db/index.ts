@@ -138,148 +138,20 @@ export function seedInitialData(force = false) {
 		`);
 
 		// Garasi Sepeda & Sepeda Motor (Kode S...) - Tarif Sepeda Motor: 125rb per hari
-		insertGarage.run('S001', 'sepeda', 'Honda Vario 160 ABS', 'L 9876 XYZ', 'Sepeda Motor Matic', 125000, 0, 0, 'used', now);
+		insertGarage.run('S001', 'sepeda', 'Honda Vario 160 ABS', 'L 9876 XYZ', 'Sepeda Motor Matic', 125000, 0, 0, 'available', now);
 		insertGarage.run('S002', 'sepeda', 'Yamaha NMax 155 Connected', 'B 4567 NMX', 'Sepeda Motor Maxi', 125000, 0, 0, 'available', now);
 		insertGarage.run('S003', 'sepeda', 'Honda CRF 150L Trail', 'W 3456 CRF', 'Sepeda Motor Trail', 125000, 0, 0, 'available', now);
 
 		// Garasi Mobil (Kode C...) - Tarif Mobil: 500rb s/d 1jt per hari
-		insertGarage.run('C001', 'mobil', 'Toyota Avanza 1.5G', 'L 1234 AB', 'MPV Keluarga', 500000, 0, 0, 'used', now);
-		insertGarage.run('C002', 'mobil', 'Mitsubishi Xpander Ultimate', 'N 9999 CD', 'MPV Keluarga', 650000, 0, 0, 'used', now);
+		insertGarage.run('C001', 'mobil', 'Toyota Avanza 1.5G', 'L 1234 AB', 'MPV Keluarga', 500000, 0, 0, 'available', now);
+		insertGarage.run('C002', 'mobil', 'Mitsubishi Xpander Ultimate', 'N 9999 CD', 'MPV Keluarga', 650000, 0, 0, 'available', now);
 		insertGarage.run('C003', 'mobil', 'Honda HR-V SE 1.5 CVT', 'B 2345 HRV', 'Medium SUV', 750000, 0, 0, 'available', now);
 		insertGarage.run('C004', 'mobil', 'Toyota Camry 2.5 V Luxury', 'B 1000 CMR', 'Executive Sedan', 1000000, 0, 0, 'available', now);
 
 		// Garasi Mobil Listrik (Kode E...) - Dilengkapi SPKLU AC Wallbox
-		insertGarage.run('E001', 'mobil_listrik', 'Hyundai Ioniq 5 Signature', 'B 5678 EV', 'Crossover EV', 750000, 2500, 58, 'used', now);
+		insertGarage.run('E001', 'mobil_listrik', 'Hyundai Ioniq 5 Signature', 'B 5678 EV', 'Crossover EV', 750000, 2500, 58, 'available', now);
 		insertGarage.run('E002', 'mobil_listrik', 'BYD Seal Performance AWD', 'B 3456 BYD', 'Performance EV Sedan', 850000, 2500, 82, 'available', now);
 		insertGarage.run('E003', 'mobil_listrik', 'Kia EV9 GT-Line AWD', 'B 9999 KIA', 'Flagship Luxury EV', 1000000, 2500, 99.8, 'available', now);
-
-		// Ambil User Budi & Garasi-garasi untuk membuat transaksi sampel
-		const budiUser = db.prepare('SELECT id FROM users WHERE email = ?').get('budi@gmail.com') as { id: number };
-		const c001 = db.prepare('SELECT id, daily_price FROM garages WHERE code = ?').get('C001') as any;
-		const c002 = db.prepare('SELECT id, daily_price FROM garages WHERE code = ?').get('C002') as any;
-		const e001 = db.prepare('SELECT id, daily_price, electricity_price_kwh FROM garages WHERE code = ?').get('E001') as any;
-		const s001 = db.prepare('SELECT id, daily_price FROM garages WHERE code = ?').get('S001') as any;
-
-		if (budiUser && c001 && e001 && s001) {
-			const paymentProofSvg = 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="200" height="100"><rect width="200" height="100" fill="%2322c55e"/><text x="10" y="55" fill="white" font-weight="bold">BUKTI BAYAR LUNAS</text></svg>';
-
-			const insertRental = db.prepare(`
-				INSERT INTO rentals (
-					user_id, garage_id, vehicle_type, license_plate, vehicle_brand_model,
-					battery_capacity_kwh, rental_type, duration, start_date, end_date,
-					base_rental_cost, electricity_cost, total_cost, payment_proof, status, created_at
-				) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-			`);
-
-			// Rental 1: Mobil Bensin di C001 (5 hari x 500.000 = 2.500.000)
-			const endC001 = new Date();
-			endC001.setDate(endC001.getDate() + 5);
-			const r1Result = insertRental.run(
-				budiUser.id,
-				c001.id,
-				'mobil',
-				'L 1234 AB',
-				'Toyota Avanza 1.5G 2024',
-				0,
-				'harian',
-				5,
-				today,
-				endC001.toISOString().split('T')[0],
-				2500000,
-				0,
-				2500000,
-				paymentProofSvg,
-				'active',
-				now
-			);
-
-			// Rental 2: Mobil Listrik di E001 (3 hari x 750.000 = 2.250.000 + 60 kWh x 2500 = 150.000 => 2.400.000)
-			const endE001 = new Date();
-			endE001.setDate(endE001.getDate() + 3);
-			insertRental.run(
-				budiUser.id,
-				e001.id,
-				'mobil_listrik',
-				'B 5678 EV',
-				'Hyundai Ioniq 5 Signature',
-				60,
-				'harian',
-				3,
-				today,
-				endE001.toISOString().split('T')[0],
-				2250000,
-				150000, // 60 kWh * 2500
-				2400000,
-				paymentProofSvg,
-				'active',
-				now
-			);
-
-			// Rental 3: Sepeda Motor di S001 (Bulanan: 1 bulan = 25 x 125.000 = 3.125.000)
-			const endS001 = new Date();
-			endS001.setMonth(endS001.getMonth() + 1);
-			insertRental.run(
-				budiUser.id,
-				s001.id,
-				'sepeda_motor',
-				'L 9876 XYZ',
-				'Honda Vario 160 ABS',
-				0,
-				'bulanan',
-				1,
-				today,
-				endS001.toISOString().split('T')[0],
-				3125000,
-				0,
-				3125000,
-				paymentProofSvg,
-				'active',
-				now
-			);
-
-			// Rental 4: Mobil di C002 (7 hari x 650.000 = 4.550.000)
-			const endC002 = new Date();
-			endC002.setDate(endC002.getDate() + 7);
-			insertRental.run(
-				budiUser.id,
-				c002.id,
-				'mobil',
-				'N 9999 CD',
-				'Mitsubishi Xpander Ultimate',
-				0,
-				'harian',
-				7,
-				today,
-				endC002.toISOString().split('T')[0],
-				4550000,
-				0,
-				4550000,
-				paymentProofSvg,
-				'active',
-				now
-			);
-
-			// Tambahkan 1 riwayat perpanjangan pada Rental 1 (2 hari x 500.000 = 1.000.000)
-			const rental1Id = Number(r1Result.lastInsertRowid);
-			if (rental1Id) {
-				const extEnd = new Date(endC001);
-				extEnd.setDate(extEnd.getDate() + 2);
-
-				db.prepare(`
-					INSERT INTO rental_extensions (
-						rental_id, old_end_date, new_end_date, additional_days, additional_cost, payment_proof, created_at
-					) VALUES (?, ?, ?, ?, ?, ?, ?)
-				`).run(
-					rental1Id,
-					endC001.toISOString().split('T')[0],
-					extEnd.toISOString().split('T')[0],
-					2,
-					1000000, // 2 * 500.000
-					paymentProofSvg,
-					now
-				);
-			}
-		}
 	}
 }
 
