@@ -1,180 +1,247 @@
+<!-- src/routes/+page.svelte -->
 <script lang="ts">
 	import type { PageData } from './$types';
+	import Icon from '#lib/components/Icon.svelte';
 
 	let { data }: { data: PageData } = $props();
+
+	let occupancyRate = $derived(
+		data.totalCount > 0 ? Math.round(((data.totalCount - data.availableCount) / data.totalCount) * 100) : 0
+	);
 </script>
 
 <svelte:head>
-	<title>GARASI.ID - Sistem Manajemen Persewaan Garasi Kendaraan</title>
+	<title>Portal Persewaan Garasi - SIM-GARASI</title>
 </svelte:head>
 
-<div class="space-y-8 py-4">
-	<!-- Hero Section -->
-	<section class="bg-gradient-to-br from-indigo-950 via-indigo-900 to-slate-900 text-white rounded-3xl p-8 md:p-12 shadow-xl border border-indigo-800/50 relative overflow-hidden">
-		<div class="max-w-2xl relative z-10 space-y-4">
-			<div class="inline-flex items-center gap-2 bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 px-3 py-1 rounded-full text-xs font-semibold">
-				<span>🛡️</span> Sistem Berstandar SKKNI Pemrogram
+<div class="space-y-6 py-2">
+	<!-- System Portal Header Card -->
+	<div class="bg-white rounded-lg border border-slate-200 p-6 shadow-xs flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+		<div>
+			<div class="inline-flex items-center gap-1.5 text-xs font-semibold text-blue-700 bg-blue-50 px-2 py-0.5 rounded border border-blue-100 mb-2">
+				<Icon name="shield" size={13} />
+				<span>Uji Kompetensi Pemrogram — Universitas Ciputra</span>
 			</div>
-			<h1 class="text-3xl md:text-5xl font-extrabold tracking-tight leading-tight">
-				Solusi Modern Persewaan Garasi Kendaraan Anda
+			<h1 class="text-xl md:text-2xl font-bold text-slate-900 tracking-tight">
+				Portal Manajemen & Persewaan Garasi Kendaraan
 			</h1>
-			<p class="text-indigo-200 text-sm md:text-base leading-relaxed">
-				Kelola dan sewa garasi secara harian atau bulanan untuk sepeda, sepeda motor, mobil konvensional, hingga mobil listrik dengan fasilitas pengisian daya baterai terintegrasi.
+			<p class="text-xs text-slate-500 mt-1 max-w-2xl leading-relaxed">
+				Sistem informasi operasional penyewaan garasi terstruktur untuk pengelolaan unit garasi sepeda, kendaraan roda empat konvensional, serta kendaraan listrik dengan integrasi tarif pengisian daya baterai.
 			</p>
-			<div class="pt-4 flex flex-wrap gap-3">
-				<a
-					href="/penyewa/sewa-baru"
-					class="px-6 py-3 bg-amber-400 hover:bg-amber-500 text-slate-950 font-bold rounded-xl text-sm transition shadow-lg flex items-center gap-2"
-				>
-					<span>🚗</span> Sewa Garasi Sekarang
-				</a>
-				<a
-					href="/auth/login"
-					class="px-6 py-3 bg-white/10 hover:bg-white/20 text-white font-semibold rounded-xl text-sm transition border border-white/20"
-				>
-					Portal Masuk
-				</a>
-			</div>
 		</div>
 
-		<!-- Decorative Background -->
-		<div class="absolute -right-10 -bottom-10 opacity-10 text-[200px] select-none pointer-events-none">
-			🏢
+		<div class="flex items-center gap-2 shrink-0">
+			<a
+				href="/penyewa/sewa-baru"
+				class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded text-xs transition flex items-center gap-1.5 shadow-xs"
+			>
+				<Icon name="plus" size={14} />
+				<span>Formulir Sewa Baru</span>
+			</a>
+			<a
+				href="/auth/login"
+				class="px-4 py-2 bg-white hover:bg-slate-50 text-slate-700 font-semibold rounded text-xs transition border border-slate-300 shadow-xs"
+			>
+				Masuk Sistem
+			</a>
 		</div>
-	</section>
+	</div>
 
-	<!-- Status & Tipe Garasi Cards -->
-	<section class="space-y-4">
+	<!-- Status Metrics Grid -->
+	<div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+		<div class="bg-white p-4 rounded-lg border border-slate-200 shadow-xs">
+			<div class="text-[11px] font-semibold text-slate-500 uppercase tracking-wide">Total Kapasitas Garasi</div>
+			<div class="text-2xl font-bold font-mono text-slate-900 mt-1">{data.totalCount} Unit</div>
+			<div class="text-[11px] text-slate-400 mt-0.5">Seluruh kategori garasi</div>
+		</div>
+
+		<div class="bg-white p-4 rounded-lg border border-slate-200 shadow-xs">
+			<div class="text-[11px] font-semibold text-emerald-700 uppercase tracking-wide">Unit Tersedia</div>
+			<div class="text-2xl font-bold font-mono text-emerald-700 mt-1">{data.availableCount} Unit</div>
+			<div class="text-[11px] text-emerald-600/80 mt-0.5">Siap untuk disewa</div>
+		</div>
+
+		<div class="bg-white p-4 rounded-lg border border-slate-200 shadow-xs">
+			<div class="text-[11px] font-semibold text-amber-700 uppercase tracking-wide">Unit Terisi (Used)</div>
+			<div class="text-2xl font-bold font-mono text-amber-700 mt-1">{data.totalCount - data.availableCount} Unit</div>
+			<div class="text-[11px] text-amber-600/80 mt-0.5">Sedang aktif disewa</div>
+		</div>
+
+		<div class="bg-white p-4 rounded-lg border border-slate-200 shadow-xs">
+			<div class="text-[11px] font-semibold text-slate-500 uppercase tracking-wide">Tingkat Okupansi</div>
+			<div class="text-2xl font-bold font-mono text-blue-700 mt-1">{occupancyRate}%</div>
+			<div class="text-[11px] text-slate-400 mt-0.5">Rasio keterisian garasi</div>
+		</div>
+	</div>
+
+	<!-- Klasifikasi Tipe Garasi -->
+	<div class="space-y-3">
 		<div class="flex items-center justify-between">
-			<div>
-				<h2 class="text-xl font-bold text-slate-900">Ketersediaan Tipe Garasi</h2>
-				<p class="text-xs text-slate-500">Pilihan garasi yang disesuaikan dengan jenis kendaraan Anda</p>
-			</div>
-			<div class="text-right">
-				<span class="text-xs font-semibold px-2.5 py-1 bg-emerald-100 text-emerald-800 rounded-full">
-					{data.availableCount} dari {data.totalCount} Garasi Tersedia
-				</span>
-			</div>
+			<h2 class="text-sm font-bold text-slate-800 uppercase tracking-wide flex items-center gap-1.5">
+				<Icon name="building" size={15} class="text-slate-500" />
+				<span>Klasifikasi & Spesifikasi Tipe Garasi</span>
+			</h2>
+			<span class="text-xs text-slate-500 font-mono">Kode Format: S, C, E</span>
 		</div>
 
-		<div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-			<!-- Sepeda -->
-			<div class="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm hover:shadow-md transition">
-				<div class="flex items-center justify-between mb-4">
-					<div class="w-12 h-12 bg-sky-100 text-sky-700 rounded-xl flex items-center justify-center text-2xl">
-						🚲
+		<div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+			<!-- Tipe Sepeda -->
+			<div class="bg-white rounded-lg border border-slate-200 p-5 shadow-xs flex flex-col justify-between">
+				<div>
+					<div class="flex items-center justify-between pb-3 border-b border-slate-100">
+						<div class="flex items-center gap-2">
+							<div class="w-8 h-8 rounded bg-slate-100 text-slate-700 flex items-center justify-center">
+								<Icon name="bike" size={16} />
+							</div>
+							<span class="font-bold text-sm text-slate-800">Garasi Sepeda</span>
+						</div>
+						<span class="font-mono text-xs font-bold text-slate-700 bg-slate-100 px-2 py-0.5 rounded border border-slate-200">
+							Prefix: S
+						</span>
 					</div>
-					<span class="text-xs font-mono font-bold bg-slate-100 text-slate-600 px-2 py-1 rounded">
-						Kode S...
-					</span>
+
+					<p class="text-xs text-slate-600 mt-3 leading-relaxed">
+						Peruntukan khusus bagi kendaraan roda dua: sepeda (gowes) dan sepeda motor.
+					</p>
+
+					<div class="mt-4 space-y-1.5 text-xs text-slate-600">
+						<div class="flex justify-between py-1 border-b border-slate-50">
+							<span class="text-slate-500">Tarif Harian:</span>
+							<span class="font-mono font-semibold text-slate-900">Mulai Rp 10.000 / hari</span>
+						</div>
+						<div class="flex justify-between py-1 border-b border-slate-50">
+							<span class="text-slate-500">Tarif Bulanan:</span>
+							<span class="font-mono font-semibold text-blue-700">25 x Tarif Harian</span>
+						</div>
+						<div class="flex justify-between py-1">
+							<span class="text-slate-500">Ketentuan Plat:</span>
+							<span class="text-slate-700">Tidak wajib untuk sepeda</span>
+						</div>
+					</div>
 				</div>
-				<h3 class="text-lg font-bold text-slate-800">Garasi Sepeda & Motor</h3>
-				<p class="text-xs text-slate-500 mt-1 mb-4">
-					Khusus untuk sepeda gowes dan sepeda motor.
-				</p>
-				<div class="pt-4 border-t border-slate-100 space-y-2 text-xs">
-					<div class="flex justify-between">
-						<span class="text-slate-500">Tarif Harian:</span>
-						<span class="font-bold text-slate-800">Mulai Rp 10.000 / hari</span>
-					</div>
-					<div class="flex justify-between">
-						<span class="text-slate-500">Tarif Bulanan:</span>
-						<span class="font-bold text-indigo-600">25 x Tarif Harian</span>
-					</div>
-					<div class="flex justify-between">
-						<span class="text-slate-500">Ketentuan Plat:</span>
-						<span class="text-slate-700 font-medium">Bebas plat untuk sepeda</span>
-					</div>
+
+				<div class="mt-4 pt-3 border-t border-slate-100">
+					<span class="text-[11px] text-slate-400 block font-mono">Contoh Kode: S001, S002, S003</span>
 				</div>
 			</div>
 
-			<!-- Mobil Bensin -->
-			<div class="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm hover:shadow-md transition">
-				<div class="flex items-center justify-between mb-4">
-					<div class="w-12 h-12 bg-amber-100 text-amber-700 rounded-xl flex items-center justify-center text-2xl">
-						🚗
+			<!-- Tipe Mobil Bensin -->
+			<div class="bg-white rounded-lg border border-slate-200 p-5 shadow-xs flex flex-col justify-between">
+				<div>
+					<div class="flex items-center justify-between pb-3 border-b border-slate-100">
+						<div class="flex items-center gap-2">
+							<div class="w-8 h-8 rounded bg-slate-100 text-slate-700 flex items-center justify-center">
+								<Icon name="car" size={16} />
+							</div>
+							<span class="font-bold text-sm text-slate-800">Garasi Mobil</span>
+						</div>
+						<span class="font-mono text-xs font-bold text-slate-700 bg-slate-100 px-2 py-0.5 rounded border border-slate-200">
+							Prefix: C
+						</span>
 					</div>
-					<span class="text-xs font-mono font-bold bg-slate-100 text-slate-600 px-2 py-1 rounded">
-						Kode C...
-					</span>
+
+					<p class="text-xs text-slate-600 mt-3 leading-relaxed">
+						Peruntukan kendaraan roda empat: mobil berbahan bakar bensin/diesel atau mobil listrik (tanpa pengisian daya).
+					</p>
+
+					<div class="mt-4 space-y-1.5 text-xs text-slate-600">
+						<div class="flex justify-between py-1 border-b border-slate-50">
+							<span class="text-slate-500">Tarif Harian:</span>
+							<span class="font-mono font-semibold text-slate-900">Mulai Rp 50.000 / hari</span>
+						</div>
+						<div class="flex justify-between py-1 border-b border-slate-50">
+							<span class="text-slate-500">Tarif Bulanan:</span>
+							<span class="font-mono font-semibold text-blue-700">25 x Tarif Harian</span>
+						</div>
+						<div class="flex justify-between py-1">
+							<span class="text-slate-500">Ketentuan Plat:</span>
+							<span class="text-slate-700">Wajib nomor plat resmi</span>
+						</div>
+					</div>
 				</div>
-				<h3 class="text-lg font-bold text-slate-800">Garasi Mobil</h3>
-				<p class="text-xs text-slate-500 mt-1 mb-4">
-					Untuk mobil berbahan bakar bensin atau mobil listrik (tanpa pengisian daya).
-				</p>
-				<div class="pt-4 border-t border-slate-100 space-y-2 text-xs">
-					<div class="flex justify-between">
-						<span class="text-slate-500">Tarif Harian:</span>
-						<span class="font-bold text-slate-800">Mulai Rp 50.000 / hari</span>
-					</div>
-					<div class="flex justify-between">
-						<span class="text-slate-500">Tarif Bulanan:</span>
-						<span class="font-bold text-indigo-600">25 x Tarif Harian</span>
-					</div>
-					<div class="flex justify-between">
-						<span class="text-slate-500">Ketentuan Plat:</span>
-						<span class="text-slate-700 font-medium">Wajib memiliki plat nomor</span>
-					</div>
+
+				<div class="mt-4 pt-3 border-t border-slate-100">
+					<span class="text-[11px] text-slate-400 block font-mono">Contoh Kode: C001, C002, C010</span>
 				</div>
 			</div>
 
-			<!-- Mobil Listrik -->
-			<div class="bg-white rounded-2xl p-6 border border-emerald-200 shadow-sm hover:shadow-md transition relative overflow-hidden">
-				<div class="absolute top-0 right-0 bg-emerald-600 text-white text-[10px] font-bold px-2 py-0.5 rounded-bl">
-					Charging Station
+			<!-- Tipe Mobil Listrik -->
+			<div class="bg-white rounded-lg border border-slate-200 p-5 shadow-xs flex flex-col justify-between">
+				<div>
+					<div class="flex items-center justify-between pb-3 border-b border-slate-100">
+						<div class="flex items-center gap-2">
+							<div class="w-8 h-8 rounded bg-blue-50 text-blue-700 flex items-center justify-center">
+								<Icon name="zap" size={16} />
+							</div>
+							<span class="font-bold text-sm text-slate-800">Garasi Mobil Listrik</span>
+						</div>
+						<span class="font-mono text-xs font-bold text-blue-800 bg-blue-50 px-2 py-0.5 rounded border border-blue-200">
+							Prefix: E
+						</span>
+					</div>
+
+					<p class="text-xs text-slate-600 mt-3 leading-relaxed">
+						Dilengkapi stasiun pengisian daya. Kendaraan wajib mengisi baterai hingga penuh (100% capacity).
+					</p>
+
+					<div class="mt-4 space-y-1.5 text-xs text-slate-600">
+						<div class="flex justify-between py-1 border-b border-slate-50">
+							<span class="text-slate-500">Tarif Harian:</span>
+							<span class="font-mono font-semibold text-slate-900">Mulai Rp 75.000 / hari</span>
+						</div>
+						<div class="flex justify-between py-1 border-b border-slate-50">
+							<span class="text-slate-500">Biaya Listrik:</span>
+							<span class="font-mono font-semibold text-blue-700">Kapasitas (kWh) x Tarif/kWh</span>
+						</div>
+						<div class="flex justify-between py-1">
+							<span class="text-slate-500">Kewajiban Charge:</span>
+							<span class="text-slate-700 font-medium">100% Full Capacity</span>
+						</div>
+					</div>
 				</div>
-				<div class="flex items-center justify-between mb-4">
-					<div class="w-12 h-12 bg-emerald-100 text-emerald-700 rounded-xl flex items-center justify-center text-2xl">
-						⚡
-					</div>
-					<span class="text-xs font-mono font-bold bg-slate-100 text-slate-600 px-2 py-1 rounded">
-						Kode E...
-					</span>
-				</div>
-				<h3 class="text-lg font-bold text-slate-800">Garasi Mobil Listrik</h3>
-				<p class="text-xs text-slate-500 mt-1 mb-4">
-					Khusus mobil listrik dengan kewajiban pengisian daya baterai hingga penuh (100%).
-				</p>
-				<div class="pt-4 border-t border-slate-100 space-y-2 text-xs">
-					<div class="flex justify-between">
-						<span class="text-slate-500">Tarif Harian:</span>
-						<span class="font-bold text-slate-800">Mulai Rp 75.000 / hari</span>
-					</div>
-					<div class="flex justify-between">
-						<span class="text-slate-500">Biaya Listrik:</span>
-						<span class="font-bold text-emerald-700">Kapasitas (kWh) x Tarif/kWh</span>
-					</div>
-					<div class="flex justify-between">
-						<span class="text-slate-500">Status Pengisian:</span>
-						<span class="text-emerald-700 font-semibold">Wajib Terisi Penuh</span>
-					</div>
+
+				<div class="mt-4 pt-3 border-t border-slate-100">
+					<span class="text-[11px] text-slate-400 block font-mono">Contoh Kode: E001, E002, E003</span>
 				</div>
 			</div>
 		</div>
-	</section>
+	</div>
 
-	<!-- Business Rules Infographic -->
-	<section class="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm">
-		<h2 class="text-lg font-bold text-slate-900 mb-3 flex items-center gap-2">
-			<span>📋</span> Ketentuan & Alur Sistem Persewaan Garasi
-		</h2>
-		<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 text-xs text-slate-600">
-			<div class="p-3 bg-slate-50 rounded-xl border border-slate-100">
-				<div class="font-bold text-slate-800 mb-1 text-sm">1. Registrasi & Verifikasi</div>
-				Penyewa mendaftar dengan NIK, nama lengkap, telepon, email & password. Admin memverifikasi validitas KTP sebelum sewa dapat dilakukan.
+	<!-- Prosedur Operasional Standar (SOP) -->
+	<div class="bg-white rounded-lg border border-slate-200 p-5 shadow-xs">
+		<h3 class="text-xs font-bold text-slate-800 uppercase tracking-wide mb-3 flex items-center gap-1.5">
+			<Icon name="file-text" size={14} class="text-slate-500" />
+			<span>Alur Operasional Sistem Persewaan</span>
+		</h3>
+
+		<div class="grid grid-cols-1 md:grid-cols-4 gap-4 text-xs">
+			<div class="p-3 bg-slate-50 rounded border border-slate-200/80">
+				<div class="font-bold text-slate-800 mb-1">1. Registrasi Penyewa</div>
+				<p class="text-slate-600 leading-relaxed">
+					Penyewa mendaftar dengan NIK (16 digit), nama, nomor telepon, email, dan password. Status awal adalah <em>pending</em>.
+				</p>
 			</div>
-			<div class="p-3 bg-slate-50 rounded-xl border border-slate-100">
-				<div class="font-bold text-slate-800 mb-1 text-sm">2. Pemilihan Garasi</div>
-				Sistem menyaring tipe garasi sesuai jenis kendaraan: Sepeda/Motor (S), Mobil Bensin (C), Mobil Listrik (C atau E).
+
+			<div class="p-3 bg-slate-50 rounded border border-slate-200/80">
+				<div class="font-bold text-slate-800 mb-1">2. Verifikasi Identitas</div>
+				<p class="text-slate-600 leading-relaxed">
+					Admin meninjau keabsahan KTP/NIK dan menyetujui (approve) atau menolak pendaftaran calon penyewa.
+				</p>
 			</div>
-			<div class="p-3 bg-slate-50 rounded-xl border border-slate-100">
-				<div class="font-bold text-slate-800 mb-1 text-sm">3. Durasi & Pembayaran</div>
-				Sewa harian maksimal 30 hari. Sewa bulanan otomatis dihitung 25x tarif harian. Penyewa mengunggah bukti bayar pelunasan.
+
+			<div class="p-3 bg-slate-50 rounded border border-slate-200/80">
+				<div class="font-bold text-slate-800 mb-1">3. Transaksi Sewa</div>
+				<p class="text-slate-600 leading-relaxed">
+					Penyewa memilih jenis kendaraan, durasi (harian maks 30 hari atau bulanan), sistem memfilter garasi yang cocok, dan kalkulasi total biaya.
+				</p>
 			</div>
-			<div class="p-3 bg-slate-50 rounded-xl border border-slate-100">
-				<div class="font-bold text-slate-800 mb-1 text-sm">4. Perpanjangan Garasi</div>
-				Admin dapat memperpanjang masa sewa garasi aktif dengan mengunggah bukti bayar baru dan menghitung selisih hari tambahan.
+
+			<div class="p-3 bg-slate-50 rounded border border-slate-200/80">
+				<div class="font-bold text-slate-800 mb-1">4. Perpanjangan Sewa</div>
+				<p class="text-slate-600 leading-relaxed">
+					Admin dapat memperpanjang tanggal selesai sewa garasi yang aktif dengan menghitung selisih hari dan mengunggah bukti bayar.
+				</p>
 			</div>
 		</div>
-	</section>
+	</div>
 </div>

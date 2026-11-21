@@ -87,3 +87,4 @@ CREATE TABLE IF NOT EXISTS rental_extensions (
 );
 
 CREATE INDEX IF NOT EXISTS idx_extensions_rental ON rental_extensions(rental_id);
+
