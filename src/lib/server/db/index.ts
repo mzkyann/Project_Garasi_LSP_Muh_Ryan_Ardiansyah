@@ -156,5 +156,47 @@ export function seedInitialData(force = false) {
 	}
 }
 
+/**
+ * Sinkronisasi status garasi dan sewa berdasarkan tanggal hari ini:
+ * - Sewa aktif yang sudah melewati tanggal selesai (end_date <= today) otomatis menjadi 'completed'
+ * - Garasi yang sedang disewa aktif hari ini (start_date <= today AND end_date > today) berstatus 'used'
+ * - Garasi lainnya berstatus 'available' (siap dirental)
+ */
+export function syncGarageStatuses(referenceDate?: string) {
+	const today = referenceDate || new Date().toISOString().split('T')[0];
+
+	try {
+		// 1. Selesaikan kontrak rental aktif yang sudah selesai (end_date <= today)
+		db.prepare(`
+			UPDATE rentals 
+			SET status = 'completed' 
+			WHERE status = 'active' AND end_date <= ?
+		`).run(today);
+
+		// 2. Tandai garasi sebagai 'used' hanya jika ada sewa aktif yang mencakup hari ini
+		db.prepare(`
+			UPDATE garages 
+			SET status = 'used' 
+			WHERE id IN (
+				SELECT DISTINCT garage_id FROM rentals 
+				WHERE status = 'active' AND start_date <= ? AND end_date > ?
+			)
+		`).run(today, today);
+
+		// 3. Kembalikan garasi menjadi 'available' jika tidak ada sewa aktif yang berjalan hari ini
+		db.prepare(`
+			UPDATE garages 
+			SET status = 'available' 
+			WHERE id NOT IN (
+				SELECT DISTINCT garage_id FROM rentals 
+				WHERE status = 'active' AND start_date <= ? AND end_date > ?
+			)
+		`).run(today, today);
+	} catch (err) {
+		console.error('Error syncing garage statuses:', err);
+	}
+}
+
 // Inisialisasi DB saat modul dimuat
 initDb();
+syncGarageStatuses();

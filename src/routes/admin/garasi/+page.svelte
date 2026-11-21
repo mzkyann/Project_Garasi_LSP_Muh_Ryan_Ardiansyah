@@ -358,7 +358,7 @@
 													</span>
 													{#if garage.active_start_date && garage.active_end_date}
 														<div class="text-[11px] font-mono text-rose-700 font-bold">
-															{garage.active_start_date} s/d {garage.active_end_date}
+															{garage.active_start_date} (Kembali: {garage.active_end_date})
 														</div>
 													{/if}
 													{#if garage.active_tenant_name}

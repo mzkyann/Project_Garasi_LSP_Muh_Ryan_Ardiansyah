@@ -1,7 +1,7 @@
 // src/routes/admin/persetujuan/+page.server.ts
 import { fail, redirect, type Actions } from '@sveltejs/kit';
 import type { PageServerLoad } from './$types';
-import { db } from '#lib/server/db/index.js';
+import { db, syncGarageStatuses } from '#lib/server/db/index.js';
 
 export const load: PageServerLoad = async ({ locals }) => {
 	if (!locals.user || locals.user.role !== 'admin') {
@@ -9,6 +9,7 @@ export const load: PageServerLoad = async ({ locals }) => {
 	}
 
 	const today = new Date().toISOString().split('T')[0];
+	syncGarageStatuses(today);
 
 	// 1. Permohonan sewa baru yang menunggu persetujuan (status = 'pending')
 	const pendingRentals = db.prepare(`
@@ -98,10 +99,8 @@ export const actions: Actions = {
 		// Ubah status sewa menjadi 'active'
 		db.prepare("UPDATE rentals SET status = 'active' WHERE id = ?").run(rentalId);
 
-		// Jika tanggal sewa sudah dimulai hari ini atau masa lampau, set status garasi menjadi 'used'
-		if (rental.start_date <= today) {
-			db.prepare("UPDATE garages SET status = 'used' WHERE id = ?").run(rental.garage_id);
-		}
+		// Sinkronkan status garasi secara otomatis
+		syncGarageStatuses(today);
 
 		return {
 			success: true,
@@ -181,6 +180,8 @@ export const actions: Actions = {
 			SET end_date = ?, total_cost = total_cost + ?
 			WHERE id = ?
 		`).run(ext.new_end_date, ext.additional_cost, rental.id);
+
+		syncGarageStatuses();
 
 		return {
 			success: true,

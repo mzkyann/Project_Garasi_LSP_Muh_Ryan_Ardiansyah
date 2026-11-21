@@ -434,8 +434,12 @@
 					<div class="flex items-center gap-2 text-[#2E382A]">
 						<Icon name="calendar" size={15} class="text-[#71856A]" />
 						<span>
-							Periode Rencana: <strong>{formatDateIndo(selectedStartDate)}</strong> s/d <strong>{formatDateIndo(calculatedEndDate)}</strong>
-							<span class="font-mono text-[#596A53]">({duration} {rentalType === 'harian' ? 'Hari' : 'Bulan'})</span>
+							{#if rentalType === 'harian' && duration === 1}
+								Masa Pakai: <strong>{formatDateIndo(selectedStartDate)} (1 Hari / 24 Jam)</strong> • Pengembalian: <strong>{formatDateIndo(calculatedEndDate)}</strong>
+							{:else}
+								Periode Rencana: <strong>{formatDateIndo(selectedStartDate)}</strong> s/d <strong>{formatDateIndo(calculatedEndDate)}</strong>
+								<span class="font-mono text-[#596A53]">({duration} {rentalType === 'harian' ? 'Hari' : 'Bulan'})</span>
+							{/if}
 						</span>
 					</div>
 					<span class="text-[11px] text-[#596A53] font-semibold bg-white px-2.5 py-0.5 rounded-full border border-[#DFE5DC] self-start sm:self-auto">
@@ -565,9 +569,12 @@
 									{#if isBooked}
 										<div class="mt-2.5 p-2.5 bg-[#FAF8F4] border border-[#DAC99B] rounded-lg space-y-1.5">
 											<div class="flex items-center justify-between text-xs">
-												<span class="text-[#8A7545] font-semibold">Periode Sewa Aktif:</span>
+												<span class="text-[#8A7545] font-semibold">Masa Sewa Saat Ini:</span>
 												<span class="font-mono text-[#8A7545] font-bold text-[11px]">
-													{formatDateIndo(garage.active_start_date)} s/d {formatDateIndo(garage.active_end_date)}
+													{formatDateIndo(garage.active_start_date)}
+													{#if garage.active_end_date}
+														<span class="text-[#877758] font-normal">(Kembali: {formatDateIndo(garage.active_end_date)})</span>
+													{/if}
 												</span>
 											</div>
 											<div class="flex items-center justify-between text-xs pt-1 border-t border-[#EAE3D4]">
@@ -579,6 +586,9 @@
 													{formatDateIndo(garage.next_available_date)}
 													<span class="text-[10px] text-[#877758] font-normal">({getDaysRemainingText(garage.next_available_date, data.today)})</span>
 												</span>
+											</div>
+											<div class="text-[10px] text-[#596A53] bg-[#EFF3ED] p-1.5 rounded border border-[#DFE5DC] font-medium leading-tight">
+												💡 Unit sewa 1 hari siap dirental kembali pada tanggal pengembalian ({formatDateIndo(garage.next_available_date)}).
 											</div>
 											<button
 												type="button"
@@ -738,7 +748,8 @@
 							<div class="flex justify-between">
 								<span class="text-[#6B5E45]">Masa Sewa Berjalan:</span>
 								<span class="font-mono font-bold text-[#383123]">
-									{formatDateIndo(scheduleModalGarage.active_start_date)} s/d {formatDateIndo(scheduleModalGarage.active_end_date)}
+									{formatDateIndo(scheduleModalGarage.active_start_date)}
+									<span class="text-[#877758] font-normal">(Kembali: {formatDateIndo(scheduleModalGarage.active_end_date)})</span>
 								</span>
 							</div>
 							{#if scheduleModalGarage.active_tenant_name}
@@ -755,6 +766,9 @@
 								<span class="font-mono font-extrabold text-[#71856A] text-sm">
 									{formatDateIndo(scheduleModalGarage.next_available_date)}
 								</span>
+							</div>
+							<div class="text-[11px] text-[#596A53] bg-[#EFF3ED] p-2 rounded-lg border border-[#DFE5DC] font-medium">
+								💡 Unit langsung ready disewa pada tanggal pengembalian ({formatDateIndo(scheduleModalGarage.next_available_date)}).
 							</div>
 						</div>
 					{:else}

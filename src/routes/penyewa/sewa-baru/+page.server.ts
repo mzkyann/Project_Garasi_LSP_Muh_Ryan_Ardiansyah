@@ -2,7 +2,7 @@
 import { fail, redirect, type Actions } from '@sveltejs/kit';
 import { Buffer } from 'node:buffer';
 import type { PageServerLoad } from './$types';
-import { db } from '#lib/server/db/index.js';
+import { db, syncGarageStatuses } from '#lib/server/db/index.js';
 import {
 	Bicycle,
 	Motorcycle,
@@ -37,6 +37,7 @@ export const load: PageServerLoad = async ({ locals }) => {
 	}
 
 	const today = new Date().toISOString().split('T')[0];
+	syncGarageStatuses(today);
 
 	// Ambil seluruh unit garasi/kendaraan beserta jadwal sewa aktifnya (tanggal mulai s/d tanggal selesai)
 	const garages = db.prepare(`
@@ -44,18 +45,18 @@ export const load: PageServerLoad = async ({ locals }) => {
 			g.*,
 			(
 				SELECT r.start_date FROM rentals r 
-				WHERE r.garage_id = g.id AND r.status IN ('pending', 'active') AND r.end_date >= ?
+				WHERE r.garage_id = g.id AND r.status IN ('pending', 'active') AND r.end_date > ?
 				ORDER BY r.end_date DESC LIMIT 1
 			) as active_start_date,
 			(
 				SELECT r.end_date FROM rentals r 
-				WHERE r.garage_id = g.id AND r.status IN ('pending', 'active') AND r.end_date >= ?
+				WHERE r.garage_id = g.id AND r.status IN ('pending', 'active') AND r.end_date > ?
 				ORDER BY r.end_date DESC LIMIT 1
 			) as active_end_date,
 			(
 				SELECT u.name FROM rentals r 
 				JOIN users u ON r.user_id = u.id
-				WHERE r.garage_id = g.id AND r.status IN ('pending', 'active') AND r.end_date >= ?
+				WHERE r.garage_id = g.id AND r.status IN ('pending', 'active') AND r.end_date > ?
 				ORDER BY r.end_date DESC LIMIT 1
 			) as active_tenant_name
 		FROM garages g
@@ -67,7 +68,7 @@ export const load: PageServerLoad = async ({ locals }) => {
 		SELECT r.garage_id, r.start_date, r.end_date, r.status, u.name as tenant_name
 		FROM rentals r
 		JOIN users u ON r.user_id = u.id
-		WHERE r.status IN ('pending', 'active') AND r.end_date >= ?
+		WHERE r.status IN ('pending', 'active') AND r.end_date > ?
 		ORDER BY r.start_date ASC
 	`).all(today) as any[];
 

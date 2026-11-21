@@ -1,7 +1,7 @@
 // src/routes/admin/garasi/+page.server.ts
 import { fail, redirect, type Actions } from '@sveltejs/kit';
 import type { PageServerLoad } from './$types';
-import { db } from '#lib/server/db/index.js';
+import { db, syncGarageStatuses } from '#lib/server/db/index.js';
 import { GarageCodeGenerator } from '#lib/server/domain/GarageCodeGenerator.js';
 import type { GarageType } from '#lib/server/domain/Garage.js';
 
@@ -9,6 +9,9 @@ export const load: PageServerLoad = async ({ locals }) => {
 	if (!locals.user || locals.user.role !== 'admin') {
 		throw redirect(303, '/auth/login');
 	}
+
+	const today = new Date().toISOString().split('T')[0];
+	syncGarageStatuses(today);
 
 	// Hitung sequence number saat ini untuk masing-masing tipe garasi
 	const seqSepeda = db.prepare("SELECT COUNT(*) as count FROM garages WHERE type = 'sepeda'").get() as { count: number };
@@ -21,27 +24,27 @@ export const load: PageServerLoad = async ({ locals }) => {
 			g.*,
 			(
 				SELECT r.start_date FROM rentals r 
-				WHERE r.garage_id = g.id AND r.status = 'active'
+				WHERE r.garage_id = g.id AND r.status = 'active' AND r.end_date > ?
 				ORDER BY r.end_date DESC LIMIT 1
 			) as active_start_date,
 			(
 				SELECT r.end_date FROM rentals r 
-				WHERE r.garage_id = g.id AND r.status = 'active'
+				WHERE r.garage_id = g.id AND r.status = 'active' AND r.end_date > ?
 				ORDER BY r.end_date DESC LIMIT 1
 			) as active_end_date,
 			(
 				SELECT u.name FROM rentals r 
 				JOIN users u ON r.user_id = u.id
-				WHERE r.garage_id = g.id AND r.status = 'active'
+				WHERE r.garage_id = g.id AND r.status = 'active' AND r.end_date > ?
 				ORDER BY r.end_date DESC LIMIT 1
 			) as active_tenant_name,
 			(
 				SELECT COUNT(*) FROM rentals r 
-				WHERE r.garage_id = g.id AND r.status = 'active'
+				WHERE r.garage_id = g.id AND r.status = 'active' AND r.end_date > ?
 			) as active_rentals
 		FROM garages g
 		ORDER BY g.type, g.code ASC
-	`).all() as any[];
+	`).all(today, today, today, today) as any[];
 
 	return {
 		garages,

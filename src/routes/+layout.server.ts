@@ -1,8 +1,11 @@
 // src/routes/+layout.server.ts
 import type { LayoutServerLoad } from './$types';
-import { db } from '#lib/server/db/index.js';
+import { db, syncGarageStatuses } from '#lib/server/db/index.js';
 
 export const load: LayoutServerLoad = async ({ locals }) => {
+	// Sinkronkan status unit garasi dan masa sewa dengan kalender hari ini
+	syncGarageStatuses();
+
 	let pendingApprovals = 0;
 	let pendingUsers = 0;
 
