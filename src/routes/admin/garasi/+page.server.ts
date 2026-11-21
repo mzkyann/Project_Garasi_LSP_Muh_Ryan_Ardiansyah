@@ -18,33 +18,65 @@ export const load: PageServerLoad = async ({ locals }) => {
 	const seqMobil = db.prepare("SELECT COUNT(*) as count FROM garages WHERE type = 'mobil'").get() as { count: number };
 	const seqListrik = db.prepare("SELECT COUNT(*) as count FROM garages WHERE type = 'mobil_listrik'").get() as { count: number };
 
-	// Daftar seluruh unit garasi / kendaraan beserta jadwal sewa aktif dan nama penyewa
-	const garages = db.prepare(`
+	// Ambil semua sewa aktif beserta data lengkap penyewa untuk keperluan Review Sewa (Read-Only)
+	const activeRentals = db.prepare(`
+		SELECT 
+			r.id as rental_id,
+			r.garage_id,
+			r.user_id,
+			r.start_date,
+			r.end_date,
+			r.duration_days,
+			r.vehicle_type,
+			r.vehicle_brand_model,
+			r.license_plate,
+			r.battery_capacity_kwh,
+			r.electricity_cost,
+			r.daily_price,
+			r.total_cost,
+			r.payment_proof,
+			r.notes,
+			r.created_at as rental_created_at,
+			u.name as tenant_name,
+			u.nik as tenant_nik,
+			u.phone as tenant_phone,
+			u.email as tenant_email
+		FROM rentals r
+		JOIN users u ON r.user_id = u.id
+		WHERE r.status = 'active' AND r.end_date > ?
+		ORDER BY r.end_date DESC
+	`).all(today) as any[];
+
+	const rentalMap = new Map<number, any>();
+	for (const r of activeRentals) {
+		// Pasangkan rental aktif terakhir untuk setiap slot garasi
+		if (!rentalMap.has(r.garage_id)) {
+			rentalMap.set(r.garage_id, r);
+		}
+	}
+
+	// Daftar seluruh slot garasi
+	const rawGarages = db.prepare(`
 		SELECT 
 			g.*,
-			(
-				SELECT r.start_date FROM rentals r 
-				WHERE r.garage_id = g.id AND r.status = 'active' AND r.end_date > ?
-				ORDER BY r.end_date DESC LIMIT 1
-			) as active_start_date,
-			(
-				SELECT r.end_date FROM rentals r 
-				WHERE r.garage_id = g.id AND r.status = 'active' AND r.end_date > ?
-				ORDER BY r.end_date DESC LIMIT 1
-			) as active_end_date,
-			(
-				SELECT u.name FROM rentals r 
-				JOIN users u ON r.user_id = u.id
-				WHERE r.garage_id = g.id AND r.status = 'active' AND r.end_date > ?
-				ORDER BY r.end_date DESC LIMIT 1
-			) as active_tenant_name,
 			(
 				SELECT COUNT(*) FROM rentals r 
 				WHERE r.garage_id = g.id AND r.status = 'active' AND r.end_date > ?
 			) as active_rentals
 		FROM garages g
 		ORDER BY g.type, g.code ASC
-	`).all(today, today, today, today) as any[];
+	`).all(today) as any[];
+
+	const garages = rawGarages.map((g) => {
+		const rental = rentalMap.get(g.id) || null;
+		return {
+			...g,
+			active_rental: rental,
+			active_start_date: rental ? rental.start_date : null,
+			active_end_date: rental ? rental.end_date : null,
+			active_tenant_name: rental ? rental.tenant_name : null
+		};
+	});
 
 	return {
 		garages,
@@ -57,79 +89,79 @@ export const load: PageServerLoad = async ({ locals }) => {
 };
 
 export const actions: Actions = {
-	// CREATE: Tambah 1 Unit Garasi & Kendaraan Baru
+	// CREATE: Tambah 1 Slot Garasi Baru (Kode Auto-Generate & Terkunci)
 	createGarage: async ({ request, locals }) => {
 		if (!locals.user || locals.user.role !== 'admin') {
-			return fail(403, { error: 'Hanya admin yang berhak membuat garasi baru' });
+			return fail(403, { error: 'Hanya admin yang berhak menambah slot garasi' });
 		}
 
 		const data = await request.formData();
-		const code = data.get('code')?.toString().trim().toUpperCase() || '';
 		const type = data.get('type')?.toString() as GarageType;
-		const vehicleName = data.get('vehicleName')?.toString().trim() || 'Kendaraan Standar';
-		const licensePlate = data.get('licensePlate')?.toString().trim().toUpperCase() || null;
-		const carType = data.get('carType')?.toString().trim() || 'Standar';
 		const dailyPrice = parseFloat(data.get('dailyPrice')?.toString() || '0');
 		const electricityPrice = parseFloat(data.get('electricityPrice')?.toString() || '0');
-		const batteryCapacity = parseFloat(data.get('batteryCapacity')?.toString() || '0');
-		const status = (data.get('status')?.toString() || 'available') as 'available' | 'used';
-
-		if (!code) {
-			return fail(400, { error: 'Kode garasi tidak boleh kosong' });
-		}
 
 		if (!type || !['sepeda', 'mobil', 'mobil_listrik'].includes(type)) {
 			return fail(400, { error: 'Kategori tipe garasi tidak valid' });
 		}
 
 		if (isNaN(dailyPrice) || dailyPrice <= 0) {
-			return fail(400, { error: 'Tarif sewa harian harus bernilai positif' });
+			return fail(400, { error: 'Tarif sewa harian garasi harus bernilai positif' });
 		}
 
-		// Cek duplikasi kode garasi
-		const existing = db.prepare('SELECT id FROM garages WHERE code = ?').get(code);
-		if (existing) {
-			return fail(400, { error: `Kode unit ${code} sudah terdaftar di sistem. Silakan gunakan kode lain.` });
+		// Auto-generate kode berikutnya secara sekuensial unik
+		const currentCountRow = db
+			.prepare('SELECT COUNT(*) as count FROM garages WHERE type = ?')
+			.get(type) as { count: number };
+		
+		let seq = currentCountRow.count + 1;
+		let code = GarageCodeGenerator.formatCode(type, seq);
+
+		// Pastikan kode benar-benar unik jika ada riwayat nomor sebelumnya
+		while (db.prepare('SELECT id FROM garages WHERE code = ?').get(code)) {
+			seq++;
+			code = GarageCodeGenerator.formatCode(type, seq);
 		}
 
 		const now = new Date().toISOString();
+		const slotName = `Slot Garasi ${code}`;
+		const carTypeDesc =
+			type === 'sepeda'
+				? 'Garasi Roda Dua'
+				: type === 'mobil'
+					? 'Garasi Mobil Bensin'
+					: 'Garasi EV + SPKLU';
+
 		const finalElectricityPrice = type === 'mobil_listrik' ? Math.max(0, electricityPrice) : 0;
-		const finalBatteryCapacity = type === 'mobil_listrik' ? Math.max(0, batteryCapacity) : 0;
 
 		db.prepare(`
 			INSERT INTO garages (
 				code, type, vehicle_name, license_plate, car_type, 
 				daily_price, electricity_price_kwh, battery_capacity_kwh, status, created_at
-			) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+			) VALUES (?, ?, ?, NULL, ?, ?, ?, 0, 'available', ?)
 		`).run(
 			code,
 			type,
-			vehicleName,
-			licensePlate,
-			carType,
+			slotName,
+			carTypeDesc,
 			dailyPrice,
 			finalElectricityPrice,
-			finalBatteryCapacity,
-			status,
 			now
 		);
 
 		return {
 			success: true,
-			message: `Berhasil menambahkan unit ${code} (${vehicleName} - ${licensePlate || 'Bebas Plat'}) dengan tarif Rp ${dailyPrice.toLocaleString('id-ID')}/hari.`
+			message: `Berhasil menambahkan Slot Garasi ${code} (${carTypeDesc}) dengan tarif Rp ${dailyPrice.toLocaleString('id-ID')}/hari.`
 		};
 	},
 
-	// CREATE: Batch Generation Garasi Berkelompok
+	// CREATE BATCH: Tambah Banyak Slot Garasi Sekaligus (1 s/d 999 Slot)
 	createBatchGarages: async ({ request, locals }) => {
 		if (!locals.user || locals.user.role !== 'admin') {
-			return fail(403, { error: 'Hanya admin yang berhak membuat garasi baru' });
+			return fail(403, { error: 'Hanya admin yang berhak menambah slot garasi' });
 		}
 
 		const data = await request.formData();
 		const type = data.get('type')?.toString() as GarageType;
-		const carType = data.get('carType')?.toString().trim() || 'Standar';
-		const vehicleName = data.get('vehicleName')?.toString().trim() || 'Unit Kendaraan';
 		const count = parseInt(data.get('count')?.toString() || '0', 10);
 		const dailyPrice = parseFloat(data.get('dailyPrice')?.toString() || '0');
 		const electricityPrice = parseFloat(data.get('electricityPrice')?.toString() || '0');
@@ -139,110 +171,116 @@ export const actions: Actions = {
 		}
 
 		if (isNaN(count) || count < 1 || count > 999) {
-			return fail(400, { error: 'Jumlah garasi yang dibuat harus antara 1 sampai 999' });
+			return fail(400, { error: 'Jumlah slot garasi yang ditambahkan harus antara 1 sampai 999' });
 		}
 
 		if (isNaN(dailyPrice) || dailyPrice <= 0) {
-			return fail(400, { error: 'Harga sewa harian harus bernilai positif' });
+			return fail(400, { error: 'Tarif sewa harian harus bernilai positif' });
 		}
 
 		const currentCountRow = db
 			.prepare('SELECT COUNT(*) as count FROM garages WHERE type = ?')
 			.get(type) as { count: number };
-		const startSeq = currentCountRow.count + 1;
+		
+		let startSeq = currentCountRow.count + 1;
+		let codes: string[] = [];
 
-		let codes: string[];
 		try {
 			codes = GarageCodeGenerator.generateBatchCodes(type, startSeq, count);
+			// Cek jika ada collision dengan kode yang sudah ada
+			const existingCodes = db.prepare(`SELECT code FROM garages WHERE code IN (${codes.map(() => '?').join(',')})`).all(...codes) as { code: string }[];
+			if (existingCodes.length > 0) {
+				// Cari max seq yang ada
+				const allCodes = db.prepare('SELECT code FROM garages WHERE type = ?').all(type) as { code: string }[];
+				const maxNum = allCodes.reduce((max, c) => {
+					const num = parseInt(c.code.slice(1), 10);
+					return isNaN(num) ? max : Math.max(max, num);
+				}, 0);
+				startSeq = maxNum + 1;
+				codes = GarageCodeGenerator.generateBatchCodes(type, startSeq, count);
+			}
 		} catch (err: any) {
 			return fail(400, { error: err.message });
 		}
 
 		const now = new Date().toISOString();
+		const carTypeDesc =
+			type === 'sepeda'
+				? 'Garasi Roda Dua'
+				: type === 'mobil'
+					? 'Garasi Mobil Bensin'
+					: 'Garasi EV + SPKLU';
+
+		const finalElectricityPrice = type === 'mobil_listrik' ? electricityPrice : 0;
+
 		const insertStmt = db.prepare(`
 			INSERT INTO garages (
 				code, type, vehicle_name, license_plate, car_type, 
 				daily_price, electricity_price_kwh, battery_capacity_kwh, status, created_at
-			) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'available', ?)
+			) VALUES (?, ?, ?, NULL, ?, ?, ?, 0, 'available', ?)
 		`);
 
-		const finalElectricityPrice = type === 'mobil_listrik' ? electricityPrice : 0;
-		const defaultBattery = type === 'mobil_listrik' ? 58 : 0;
-
-		for (let i = 0; i < codes.length; i++) {
-			const code = codes[i];
-			const nameWithSeq = vehicleName && vehicleName !== 'Unit Kendaraan' 
-				? `${vehicleName} #${startSeq + i}` 
-				: `Slot Garasi ${code}`;
-			insertStmt.run(code, type, nameWithSeq, null, carType, dailyPrice, finalElectricityPrice, defaultBattery, now);
+		for (const code of codes) {
+			insertStmt.run(
+				code,
+				type,
+				`Slot Garasi ${code}`,
+				carTypeDesc,
+				dailyPrice,
+				finalElectricityPrice,
+				now
+			);
 		}
 
 		return {
 			success: true,
-			message: `Berhasil membuat ${count} unit garasi tipe ${type.replace('_', ' ')} (${codes[0]} s/d ${codes[codes.length - 1]}).`
+			message: `Berhasil menambahkan ${count} slot garasi tipe ${carTypeDesc} (${codes[0]} s/d ${codes[codes.length - 1]}).`
 		};
 	},
 
-	// UPDATE: Edit Data Garasi & Kendaraan
+	// UPDATE: Hanya Mengedit Tarif Garasi (Sesuai Permintaan: Hanya Tarif yang Boleh Diedit)
 	updateGarage: async ({ request, locals }) => {
 		if (!locals.user || locals.user.role !== 'admin') {
-			return fail(403, { error: 'Hanya admin yang berhak memperbarui data garasi' });
+			return fail(403, { error: 'Hanya admin yang berhak memperbarui tarif garasi' });
 		}
 
 		const data = await request.formData();
 		const id = parseInt(data.get('id')?.toString() || '0', 10);
-		const code = data.get('code')?.toString().trim().toUpperCase() || '';
-		const type = data.get('type')?.toString() as GarageType;
-		const vehicleName = data.get('vehicleName')?.toString().trim() || 'Kendaraan';
-		const licensePlate = data.get('licensePlate')?.toString().trim().toUpperCase() || null;
-		const carType = data.get('carType')?.toString().trim() || 'Standar';
 		const dailyPrice = parseFloat(data.get('dailyPrice')?.toString() || '0');
 		const electricityPrice = parseFloat(data.get('electricityPrice')?.toString() || '0');
-		const batteryCapacity = parseFloat(data.get('batteryCapacity')?.toString() || '0');
-		const status = (data.get('status')?.toString() || 'available') as 'available' | 'used';
 
 		if (!id) {
 			return fail(400, { error: 'ID garasi tidak ditemukan' });
 		}
 
-		if (!code) {
-			return fail(400, { error: 'Kode garasi tidak boleh kosong' });
-		}
-
-		if (!type || !['sepeda', 'mobil', 'mobil_listrik'].includes(type)) {
-			return fail(400, { error: 'Kategori tipe garasi tidak valid' });
+		const garage = db.prepare('SELECT id, code, type FROM garages WHERE id = ?').get(id) as { id: number; code: string; type: GarageType } | undefined;
+		if (!garage) {
+			return fail(404, { error: 'Slot garasi tidak ditemukan' });
 		}
 
 		if (isNaN(dailyPrice) || dailyPrice <= 0) {
-			return fail(400, { error: 'Tarif sewa harian harus lebih besar dari 0' });
+			return fail(400, { error: 'Tarif sewa harian harus lebih besar dari Rp 0' });
 		}
 
-		// Cek duplikasi kode garasi pada ID lain
-		const duplicate = db.prepare('SELECT id FROM garages WHERE code = ? AND id != ?').get(code, id);
-		if (duplicate) {
-			return fail(400, { error: `Kode garasi ${code} sudah digunakan oleh unit garasi lain.` });
-		}
+		const finalElectricityPrice = garage.type === 'mobil_listrik' ? Math.max(0, electricityPrice) : 0;
 
-		const finalElectricityPrice = type === 'mobil_listrik' ? Math.max(0, electricityPrice) : 0;
-		const finalBatteryCapacity = type === 'mobil_listrik' ? Math.max(0, batteryCapacity) : 0;
-
+		// HANYA update tarif sewa harian dan tarif listrik (kode, tipe, nama, dan status tidak diubah)
 		db.prepare(`
 			UPDATE garages
-			SET code = ?, type = ?, vehicle_name = ?, license_plate = ?, car_type = ?, 
-				daily_price = ?, electricity_price_kwh = ?, battery_capacity_kwh = ?, status = ?
+			SET daily_price = ?, electricity_price_kwh = ?
 			WHERE id = ?
-		`).run(code, type, vehicleName, licensePlate, carType, dailyPrice, finalElectricityPrice, finalBatteryCapacity, status, id);
+		`).run(dailyPrice, finalElectricityPrice, id);
 
 		return {
 			success: true,
-			message: `Data unit ${code} (${vehicleName}) berhasil diperbarui.`
+			message: `Tarif sewa Slot Garasi ${garage.code} berhasil diperbarui menjadi Rp ${dailyPrice.toLocaleString('id-ID')}/hari.`
 		};
 	},
 
-	// DELETE: Hapus Unit Garasi
+	// DELETE: Hapus Slot Garasi (Hanya Jika Kosong / Tidak Sedang Disewa)
 	deleteGarage: async ({ request, locals }) => {
 		if (!locals.user || locals.user.role !== 'admin') {
-			return fail(403, { error: 'Hanya admin yang berhak menghapus unit garasi' });
+			return fail(403, { error: 'Hanya admin yang berhak menghapus slot garasi' });
 		}
 
 		const data = await request.formData();
@@ -254,13 +292,13 @@ export const actions: Actions = {
 
 		const garage = db.prepare('SELECT code, vehicle_name FROM garages WHERE id = ?').get(id) as { code: string; vehicle_name: string } | undefined;
 		if (!garage) {
-			return fail(404, { error: 'Unit garasi tidak ditemukan' });
+			return fail(404, { error: 'Slot garasi tidak ditemukan' });
 		}
 
 		// Cek apakah garasi sedang aktif dirental atau menunggu ACC
 		const activeRental = db.prepare("SELECT COUNT(*) as count FROM rentals WHERE garage_id = ? AND status IN ('pending', 'active')").get(id) as { count: number };
 		if (activeRental.count > 0) {
-			return fail(400, { error: `Unit ${garage.code} tidak dapat dihapus karena masih memiliki kontrak sewa aktif atau pengajuan sewa yang sedang diproses.` });
+			return fail(400, { error: `Slot garasi ${garage.code} tidak dapat dihapus karena sedang disewa aktif atau memiliki pengajuan sewa yang sedang diproses.` });
 		}
 
 		db.prepare('DELETE FROM rentals WHERE garage_id = ?').run(id);
@@ -268,7 +306,7 @@ export const actions: Actions = {
 
 		return {
 			success: true,
-			message: `Unit garasi ${garage.code} (${garage.vehicle_name}) berhasil dihapus.`
+			message: `Slot garasi ${garage.code} berhasil dihapus dari sistem.`
 		};
 	}
 };
