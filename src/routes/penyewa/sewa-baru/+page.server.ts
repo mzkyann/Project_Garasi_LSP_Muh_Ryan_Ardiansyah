@@ -44,23 +44,44 @@ export const load: PageServerLoad = async ({ locals }) => {
 			g.*,
 			(
 				SELECT r.start_date FROM rentals r 
-				WHERE r.garage_id = g.id AND r.status = 'active'
+				WHERE r.garage_id = g.id AND r.status = 'active' AND r.end_date >= ?
 				ORDER BY r.end_date DESC LIMIT 1
 			) as active_start_date,
 			(
 				SELECT r.end_date FROM rentals r 
-				WHERE r.garage_id = g.id AND r.status = 'active'
+				WHERE r.garage_id = g.id AND r.status = 'active' AND r.end_date >= ?
 				ORDER BY r.end_date DESC LIMIT 1
 			) as active_end_date,
 			(
 				SELECT u.name FROM rentals r 
 				JOIN users u ON r.user_id = u.id
-				WHERE r.garage_id = g.id AND r.status = 'active'
+				WHERE r.garage_id = g.id AND r.status = 'active' AND r.end_date >= ?
 				ORDER BY r.end_date DESC LIMIT 1
 			) as active_tenant_name
 		FROM garages g
 		ORDER BY g.type, g.code ASC
-	`).all() as any[];
+	`).all(today, today, today) as any[];
+
+	// Ambil semua sewa aktif untuk kalender ketersediaan armada
+	const allActiveRentals = db.prepare(`
+		SELECT r.garage_id, r.start_date, r.end_date, u.name as tenant_name
+		FROM rentals r
+		JOIN users u ON r.user_id = u.id
+		WHERE r.status = 'active' AND r.end_date >= ?
+		ORDER BY r.start_date ASC
+	`).all(today) as any[];
+
+	// Hitung kapan masing-masing kendaraan ready kembali
+	for (const g of garages) {
+		g.active_rentals = allActiveRentals.filter((r) => r.garage_id === g.id);
+		if (g.active_end_date && g.active_end_date >= today) {
+			const endObj = new Date(g.active_end_date);
+			endObj.setDate(endObj.getDate() + 1);
+			g.next_available_date = endObj.toISOString().split('T')[0];
+		} else {
+			g.next_available_date = today;
+		}
+	}
 
 	return {
 		notApproved: false,
@@ -81,8 +102,10 @@ export const actions: Actions = {
 		const duration = parseInt(data.get('duration')?.toString() || '1', 10);
 		const garageId = parseInt(data.get('garageId')?.toString() || '0', 10);
 		const proofFile = data.get('paymentProof') as File;
+		const inputStartDate = data.get('startDate')?.toString()?.trim();
 
 		const today = new Date().toISOString().split('T')[0];
+		const startDate = inputStartDate && inputStartDate >= today ? inputStartDate : today;
 
 		// Validasi dasar
 		if (!rentalType || !garageId) {
@@ -95,17 +118,30 @@ export const actions: Actions = {
 			return fail(404, { error: 'Unit kendaraan yang dipilih tidak ditemukan' });
 		}
 
-		// Validasi apakah mobil/motor sedang aktif dirental
-		const activeRental = db.prepare(`
-			SELECT id, start_date, end_date FROM rentals 
-			WHERE garage_id = ? AND status = 'active' 
-			LIMIT 1
-		`).get(garageId) as any;
+		// Hitung perkiraan tanggal selesai
+		let expectedEndDate: string;
+		try {
+			expectedEndDate = RentalCalculator.calculateEndDate(startDate, rentalType, duration);
+		} catch (err: any) {
+			return fail(400, { error: err.message });
+		}
 
-		if (rawGarage.status !== 'available' || activeRental) {
-			const rangeText = activeRental ? ` (Periode sewa aktif: ${activeRental.start_date} s/d ${activeRental.end_date})` : '';
+		// Validasi overlap jadwal sewa aktif: Apakah ada sewa aktif yang bertabrakan dengan rentang [startDate, expectedEndDate]?
+		const overlappingRental = db.prepare(`
+			SELECT id, start_date, end_date FROM rentals 
+			WHERE garage_id = ? AND status = 'active'
+			  AND NOT (end_date < ? OR start_date > ?)
+			ORDER BY end_date DESC
+			LIMIT 1
+		`).get(garageId, startDate, expectedEndDate) as any;
+
+		if (overlappingRental) {
+			const endObj = new Date(overlappingRental.end_date);
+			endObj.setDate(endObj.getDate() + 1);
+			const readyDate = endObj.toISOString().split('T')[0];
+
 			return fail(400, {
-				error: `Unit ${rawGarage.code} (${rawGarage.vehicle_name}) sedang dirental${rangeText} dan tidak dapat dirental lagi.`
+				error: `Unit ${rawGarage.code} (${rawGarage.vehicle_name}) sedang dirental pada periode tersebut (${overlappingRental.start_date} s/d ${overlappingRental.end_date}). Unit ini siap disewa kembali mulai tanggal ${readyDate}.`
 			});
 		}
 
@@ -156,7 +192,7 @@ export const actions: Actions = {
 				garageObj,
 				rentalType,
 				duration,
-				today
+				startDate
 			);
 		} catch (err: any) {
 			return fail(400, { error: err.message });
@@ -205,7 +241,9 @@ export const actions: Actions = {
 			now
 		);
 
-		updateGarage.run(garageObj.id);
+		if (startDate === today) {
+			updateGarage.run(garageObj.id);
+		}
 
 		throw redirect(303, '/penyewa/riwayat?success=1');
 	}

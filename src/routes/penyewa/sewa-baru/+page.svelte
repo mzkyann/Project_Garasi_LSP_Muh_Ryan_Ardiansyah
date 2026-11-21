@@ -9,7 +9,50 @@
 	let vehicleCategory = $state<'sepeda' | 'mobil' | 'mobil_listrik'>('mobil');
 	let rentalType = $state<'harian' | 'bulanan'>('harian');
 	let duration = $state<number>(3);
+	let selectedStartDate = $state<string>('');
 	let selectedGarageId = $state<number | null>(null);
+
+	$effect(() => {
+		if (!selectedStartDate && data.today) {
+			selectedStartDate = data.today;
+		}
+	});
+
+	// Filter tab ketersediaan (Semua / Siap Pakai / Sedang Dirental)
+	let availabilityFilter = $state<'all' | 'ready' | 'booked'>('all');
+
+	// Modal detail jadwal ketersediaan mobil
+	let scheduleModalGarage = $state<any | null>(null);
+
+	// Helper pergeseran tanggal
+	function getOffsetDate(days: number): string {
+		const d = new Date(data.today || new Date());
+		d.setDate(d.getDate() + days);
+		return d.toISOString().split('T')[0];
+	}
+
+	function formatDateIndo(dateStr: string | null | undefined): string {
+		if (!dateStr) return '-';
+		const parts = dateStr.split('-');
+		if (parts.length !== 3) return dateStr;
+		const months = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
+		const day = parseInt(parts[2], 10);
+		const monthIndex = parseInt(parts[1], 10) - 1;
+		const month = months[monthIndex] || parts[1];
+		return `${day} ${month} ${parts[0]}`;
+	}
+
+	function getDaysRemainingText(targetDateStr: string | null | undefined, baseDateStr: string | null | undefined): string {
+		if (!targetDateStr || !baseDateStr) return '';
+		const target = new Date(targetDateStr);
+		const base = new Date(baseDateStr);
+		const diffTime = target.getTime() - base.getTime();
+		const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+		if (diffDays <= 0) return 'Hari ini';
+		if (diffDays === 1) return 'Besok';
+		if (diffDays === 2) return 'Lusa';
+		return `${diffDays} hari lagi`;
+	}
 
 	// Filter unit garasi sesuai kategori kendaraan yang dipilih
 	let filteredGarages = $derived.by(() => {
@@ -27,27 +70,10 @@
 		});
 	});
 
-	// Auto-select unit pertama yang berstatus 'available' saat kategori berubah
-	$effect(() => {
-		const availableUnits = filteredGarages.filter((g: any) => g.status === 'available');
-		if (availableUnits.length > 0) {
-			const currentSelected = availableUnits.find((g: any) => g.id === selectedGarageId);
-			if (!currentSelected) {
-				selectedGarageId = availableUnits[0].id;
-			}
-		} else {
-			selectedGarageId = null;
-		}
-	});
-
-	let selectedGarage = $derived(
-		data.garages.find((g: any) => g.id === selectedGarageId) ?? null
-	);
-
-	// Hitung Tanggal Selesai otomatis
+	// Hitung Tanggal Selesai otomatis berdasarkan selectedStartDate dan durasi
 	let calculatedEndDate = $derived.by(() => {
-		if (!data.today) return '';
-		const start = new Date(data.today);
+		if (!selectedStartDate) return '';
+		const start = new Date(selectedStartDate);
 		const end = new Date(start);
 		const dur = Math.max(1, duration || 1);
 
@@ -58,6 +84,70 @@
 		}
 		return end.toISOString().split('T')[0];
 	});
+
+	// Cek apakah unit mobil/motor sedang disewa / bentrok pada rentang tanggal yang dipilih
+	function isGarageBookedOnSelectedRange(garage: any, start: string, end: string): boolean {
+		if (!start || !end) return false;
+		if (garage.active_rentals && garage.active_rentals.length > 0) {
+			return garage.active_rentals.some((r: any) => !(r.end_date < start || r.start_date > end));
+		}
+		if (garage.active_start_date && garage.active_end_date) {
+			return !(garage.active_end_date < start || garage.active_start_date > end);
+		}
+		if (start === data.today && garage.status === 'used') {
+			return true;
+		}
+		return false;
+	}
+
+	// Hitung jumlah unit ready vs booked pada kategori yang aktif
+	let readyGaragesCount = $derived(
+		filteredGarages.filter((g: any) => !isGarageBookedOnSelectedRange(g, selectedStartDate, calculatedEndDate)).length
+	);
+
+	let bookedGaragesCount = $derived(
+		filteredGarages.filter((g: any) => isGarageBookedOnSelectedRange(g, selectedStartDate, calculatedEndDate)).length
+	);
+
+	// Filter tampilan akhir berdasarkan tab availability
+	let displayedGarages = $derived.by(() => {
+		return filteredGarages.filter((g: any) => {
+			const isBooked = isGarageBookedOnSelectedRange(g, selectedStartDate, calculatedEndDate);
+			if (availabilityFilter === 'ready') return !isBooked;
+			if (availabilityFilter === 'booked') return isBooked;
+			return true;
+		});
+	});
+
+	// Auto-select unit pertama yang berstatus 'ready' pada tanggal yang dipilih
+	$effect(() => {
+		const currentSelected = data.garages.find((g: any) => g.id === selectedGarageId);
+		const isCurrentBooked = currentSelected ? isGarageBookedOnSelectedRange(currentSelected, selectedStartDate, calculatedEndDate) : true;
+
+		if (isCurrentBooked || !currentSelected) {
+			const availableUnits = filteredGarages.filter(
+				(g: any) => !isGarageBookedOnSelectedRange(g, selectedStartDate, calculatedEndDate)
+			);
+			if (availableUnits.length > 0) {
+				selectedGarageId = availableUnits[0].id;
+			} else {
+				selectedGarageId = null;
+			}
+		}
+	});
+
+	let selectedGarage = $derived(
+		data.garages.find((g: any) => g.id === selectedGarageId) ?? null
+	);
+
+	// Jadwalkan sewa mulai tanggal ready unit kendaraan
+	function scheduleFromReadyDate(garage: any) {
+		if (garage.next_available_date) {
+			selectedStartDate = garage.next_available_date;
+			selectedGarageId = garage.id;
+			availabilityFilter = 'all';
+		}
+	}
 
 	// Hitung Biaya Real-time sesuai tarif unit yang dipilih
 	let costCalculation = $derived.by(() => {
@@ -103,7 +193,7 @@
 			</div>
 			<h1 class="text-xl font-extrabold text-[#383123] mt-1">Formulir Sewa Mobil & Motor</h1>
 			<p class="text-xs text-[#6B5E45] mt-0.5 leading-relaxed">
-				Pilih kategori kendaraan, tentukan durasi, dan pilih unit mobil/motor yang siap dirental dari garasi kami.
+				Pilih tanggal sewa untuk melihat ketersediaan unit real-time. Jika unit sedang disewa, sistem menampilkan tanggal pasti kapan unit tersebut siap dirental kembali.
 			</p>
 		</div>
 
@@ -144,6 +234,9 @@
 		{/if}
 
 		<form method="POST" action="?/submitRental" enctype="multipart/form-data" class="space-y-6">
+			<!-- Hidden startDate value -->
+			<input type="hidden" name="startDate" value={selectedStartDate} />
+
 			<!-- Bagian 1: Pilih Kategori Kendaraan -->
 			<div class="bg-white rounded-xl border border-[#DFD5C2] p-6 shadow-xs space-y-4 card-hover">
 				<div class="border-b border-[#F4EFE7] pb-3 flex items-center justify-between">
@@ -151,7 +244,7 @@
 						<Icon name="car" size={15} class="text-[#71856A]" />
 						<span>1. Pilih Kategori Kendaraan</span>
 					</h2>
-					<span class="text-[11px] text-[#A08F6E]">Data Unit Otomatis Terhubung dari Admin</span>
+					<span class="text-[11px] text-[#A08F6E]">Tarif Sewa Realistis Sesuai Tipe</span>
 				</div>
 
 				<div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
@@ -165,7 +258,7 @@
 						</div>
 						<div>
 							<div class="font-bold text-xs sm:text-sm">Sepeda & Sepeda Motor</div>
-							<div class="text-[11px] text-[#71856A] font-semibold mt-0.5">Mulai Rp 125.000 / hari</div>
+							<div class="text-[11px] text-[#71856A] font-semibold mt-0.5">Rp 125.000 / hari</div>
 						</div>
 					</button>
 
@@ -199,17 +292,73 @@
 				</div>
 			</div>
 
-			<!-- Bagian 2: Tipe Sewa & Durasi -->
+			<!-- Bagian 2: PILIH TANGGAL SEWA & KALKULASI PERIODE -->
 			<div class="bg-white rounded-xl border border-[#DFD5C2] p-6 shadow-xs space-y-4 card-hover">
-				<div class="border-b border-[#F4EFE7] pb-3 flex items-center justify-between">
-					<h2 class="text-xs font-bold text-[#383123] uppercase tracking-wider flex items-center gap-2">
-						<Icon name="calendar" size={15} class="text-[#71856A]" />
-						<span>2. Periode dan Durasi Sewa</span>
-					</h2>
-					<span class="text-[11px] text-[#A08F6E]">Kalkulasi Tanggal Otomatis</span>
+				<div class="border-b border-[#F4EFE7] pb-3 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+					<div>
+						<h2 class="text-xs font-bold text-[#383123] uppercase tracking-wider flex items-center gap-2">
+							<Icon name="calendar" size={15} class="text-[#71856A]" />
+							<span>2. Periode Sewa & Pengecekan Tanggal</span>
+						</h2>
+						<p class="text-[11px] text-[#6B5E45] mt-0.5">
+							Tentukan tanggal mulai sewa untuk memverifikasi ketersediaan armada garasi pada hari tersebut.
+						</p>
+					</div>
+					<div class="flex items-center gap-1.5 self-start sm:self-auto">
+						<span class="text-[11px] text-[#877758] font-semibold">Pilihan Cepat:</span>
+						<button
+							type="button"
+							onclick={() => (selectedStartDate = data.today)}
+							class="px-2 py-0.5 text-[11px] font-bold rounded border transition btn-interactive {selectedStartDate === data.today ? 'bg-[#71856A] text-white border-[#71856A]' : 'bg-[#FAF8F4] text-[#4F4532] border-[#DFD5C2] hover:bg-[#EFE8D6]'}"
+						>
+							Hari Ini
+						</button>
+						<button
+							type="button"
+							onclick={() => (selectedStartDate = getOffsetDate(1))}
+							class="px-2 py-0.5 text-[11px] font-bold rounded border transition btn-interactive {selectedStartDate === getOffsetDate(1) ? 'bg-[#71856A] text-white border-[#71856A]' : 'bg-[#FAF8F4] text-[#4F4532] border-[#DFD5C2] hover:bg-[#EFE8D6]'}"
+						>
+							Besok
+						</button>
+						<button
+							type="button"
+							onclick={() => (selectedStartDate = getOffsetDate(3))}
+							class="px-2 py-0.5 text-[11px] font-bold rounded border transition btn-interactive {selectedStartDate === getOffsetDate(3) ? 'bg-[#71856A] text-white border-[#71856A]' : 'bg-[#FAF8F4] text-[#4F4532] border-[#DFD5C2] hover:bg-[#EFE8D6]'}"
+						>
+							+3 Hari
+						</button>
+						<button
+							type="button"
+							onclick={() => (selectedStartDate = getOffsetDate(7))}
+							class="px-2 py-0.5 text-[11px] font-bold rounded border transition btn-interactive {selectedStartDate === getOffsetDate(7) ? 'bg-[#71856A] text-white border-[#71856A]' : 'bg-[#FAF8F4] text-[#4F4532] border-[#DFD5C2] hover:bg-[#EFE8D6]'}"
+						>
+							+7 Hari
+						</button>
+					</div>
 				</div>
 
 				<div class="grid grid-cols-1 md:grid-cols-3 gap-5">
+					<!-- Pemilih Tanggal Mulai -->
+					<div>
+						<label for="startDateInput" class="block text-xs font-bold text-[#4F4532] mb-1.5">
+							Tanggal Mulai Sewa (Rencana Pakai) <span class="text-rose-600">*</span>
+						</label>
+						<div class="relative">
+							<input
+								type="date"
+								id="startDateInput"
+								bind:value={selectedStartDate}
+								min={data.today}
+								required
+								class="w-full px-3.5 py-2 text-xs border border-[#DFD5C2] rounded-lg input-focus bg-[#FCFAF4] font-mono font-bold text-[#383123]"
+							/>
+						</div>
+						<span class="text-[11px] text-[#71856A] font-semibold mt-1 block">
+							Terpilih: {formatDateIndo(selectedStartDate)} ({getDaysRemainingText(selectedStartDate, data.today)})
+						</span>
+					</div>
+
+					<!-- Kategori Durasi -->
 					<div>
 						<label for="rentalType" class="block text-xs font-bold text-[#4F4532] mb-1.5">
 							Kategori Durasi Sewa <span class="text-rose-600">*</span>
@@ -225,6 +374,7 @@
 						</select>
 					</div>
 
+					<!-- Input Durasi -->
 					<div>
 						<div class="flex justify-between items-center mb-1.5">
 							<label for="duration" class="text-xs font-bold text-[#4F4532]">
@@ -250,86 +400,112 @@
 									<button
 										type="button"
 										onclick={() => (duration = 3)}
-										class="px-2 py-1 text-[11px] bg-[#FAF8F4] hover:bg-[#EFE8D6] rounded border border-[#DFD5C2] font-mono"
+										class="px-2 py-1 text-[11px] bg-[#FAF8F4] hover:bg-[#EFE8D6] rounded border border-[#DFD5C2] font-mono font-bold"
 									>3h</button>
 									<button
 										type="button"
 										onclick={() => (duration = 7)}
-										class="px-2 py-1 text-[11px] bg-[#FAF8F4] hover:bg-[#EFE8D6] rounded border border-[#DFD5C2] font-mono"
+										class="px-2 py-1 text-[11px] bg-[#FAF8F4] hover:bg-[#EFE8D6] rounded border border-[#DFD5C2] font-mono font-bold"
 									>7h</button>
 									<button
 										type="button"
 										onclick={() => (duration = 30)}
-										class="px-2 py-1 text-[11px] bg-[#FAF8F4] hover:bg-[#EFE8D6] rounded border border-[#DFD5C2] font-mono"
+										class="px-2 py-1 text-[11px] bg-[#FAF8F4] hover:bg-[#EFE8D6] rounded border border-[#DFD5C2] font-mono font-bold"
 									>30h</button>
 								{:else}
 									<button
 										type="button"
 										onclick={() => (duration = 1)}
-										class="px-2 py-1 text-[11px] bg-[#FAF8F4] hover:bg-[#EFE8D6] rounded border border-[#DFD5C2] font-mono"
+										class="px-2 py-1 text-[11px] bg-[#FAF8F4] hover:bg-[#EFE8D6] rounded border border-[#DFD5C2] font-mono font-bold"
 									>1bln</button>
 									<button
 										type="button"
 										onclick={() => (duration = 3)}
-										class="px-2 py-1 text-[11px] bg-[#FAF8F4] hover:bg-[#EFE8D6] rounded border border-[#DFD5C2] font-mono"
+										class="px-2 py-1 text-[11px] bg-[#FAF8F4] hover:bg-[#EFE8D6] rounded border border-[#DFD5C2] font-mono font-bold"
 									>3bln</button>
 								{/if}
 							</div>
 						</div>
 					</div>
+				</div>
 
-					<div class="bg-[#FAF8F4] border border-[#DFD5C2] p-3 rounded-xl flex flex-col justify-center text-xs space-y-1.5">
-						<div class="flex justify-between">
-							<span class="text-[#877758]">Tanggal Mulai:</span>
-							<span class="font-mono font-bold text-[#383123]">{data.today}</span>
-						</div>
-						<div class="flex justify-between border-t border-[#EAE3D4] pt-1">
-							<span class="text-[#877758]">Tanggal Selesai:</span>
-							<span class="font-mono font-extrabold text-[#71856A]">{calculatedEndDate}</span>
-						</div>
+				<!-- Ringkasan Periode Aktif -->
+				<div class="bg-[#EFF3ED] border border-[#C2CCBC] p-3.5 rounded-xl flex flex-col sm:flex-row sm:items-center justify-between text-xs gap-2">
+					<div class="flex items-center gap-2 text-[#2E382A]">
+						<Icon name="calendar" size={15} class="text-[#71856A]" />
+						<span>
+							Periode Rencana: <strong>{formatDateIndo(selectedStartDate)}</strong> s/d <strong>{formatDateIndo(calculatedEndDate)}</strong>
+							<span class="font-mono text-[#596A53]">({duration} {rentalType === 'harian' ? 'Hari' : 'Bulan'})</span>
+						</span>
 					</div>
+					<span class="text-[11px] text-[#596A53] font-semibold bg-white px-2.5 py-0.5 rounded-full border border-[#DFE5DC] self-start sm:self-auto">
+						Ketersediaan di bawah otomatis disesuaikan
+					</span>
 				</div>
 			</div>
 
-			<!-- Bagian 3: PILIH UNIT KENDARAAN DI GARASI (OTOMATIS DARI ADMIN) -->
+			<!-- Bagian 3: PILIH UNIT KENDARAAN DI GARASI (OTOMATIS DARI ADMIN & STATUS TANGGAL READY) -->
 			<div class="bg-white rounded-xl border border-[#DFD5C2] p-6 shadow-xs space-y-4 card-hover">
 				<div class="flex flex-col sm:flex-row sm:items-center justify-between border-b border-[#F4EFE7] pb-3 gap-2">
 					<div>
 						<h2 class="text-xs font-bold text-[#383123] uppercase tracking-wider flex items-center gap-2">
 							<Icon name="building" size={15} class="text-[#71856A]" />
-							<span>3. Pilih Unit Kendaraan & Garasi</span>
+							<span>3. Pilih Unit Kendaraan & Ketersediaan Armada</span>
 						</h2>
 						<p class="text-[11px] text-[#6B5E45] mt-0.5">
-							Merek kendaraan dan nomor plat polisi sudah terdaftar otomatis oleh admin. Unit yang sedang dirental tidak dapat dipilih.
+							Merek dan nomor plat kendaraan terhubung otomatis. Unit yang sedang disewa menampilkan tanggal pasti kapan ready kembali.
 						</p>
 					</div>
-					<span class="text-xs font-mono font-bold text-[#71856A] bg-[#EFF3ED] px-2.5 py-0.5 rounded-full border border-[#DFE5DC] self-start sm:self-auto">
-						{filteredGarages.filter((g: any) => g.status === 'available').length} Unit Tersedia
-					</span>
+
+					<!-- Filter Ketersediaan Cepat -->
+					<div class="flex items-center gap-1.5 self-start sm:self-auto">
+						<button
+							type="button"
+							onclick={() => (availabilityFilter = 'all')}
+							class="px-2.5 py-1 text-[11px] font-bold rounded-lg border transition btn-interactive {availabilityFilter === 'all' ? 'bg-[#71856A] text-white border-[#71856A]' : 'bg-[#FAF8F4] text-[#4F4532] border-[#DFD5C2]'}"
+						>
+							Semua ({filteredGarages.length})
+						</button>
+						<button
+							type="button"
+							onclick={() => (availabilityFilter = 'ready')}
+							class="px-2.5 py-1 text-[11px] font-bold rounded-lg border transition btn-interactive {availabilityFilter === 'ready' ? 'bg-[#596A53] text-white border-[#596A53]' : 'bg-[#FAF8F4] text-[#596A53] border-[#DFD5C2]'}"
+						>
+							✓ Ready ({readyGaragesCount})
+						</button>
+						<button
+							type="button"
+							onclick={() => (availabilityFilter = 'booked')}
+							class="px-2.5 py-1 text-[11px] font-bold rounded-lg border transition btn-interactive {availabilityFilter === 'booked' ? 'bg-[#8A7545] text-white border-[#8A7545]' : 'bg-[#FAF8F4] text-[#8A7545] border-[#DFD5C2]'}"
+						>
+							⏳ Dirental ({bookedGaragesCount})
+						</button>
+					</div>
 				</div>
 
-				{#if filteredGarages.length === 0}
-					<div class="p-8 bg-[#FAF8F4] border border-[#DFD5C2] rounded-xl text-center text-[#877758] text-xs">
-						Tidak ada unit kendaraan pada kategori ini.
+				{#if displayedGarages.length === 0}
+					<div class="p-8 bg-[#FAF8F4] border border-[#DFD5C2] rounded-xl text-center text-[#877758] text-xs space-y-1">
+						<div class="font-bold">Tidak ada unit kendaraan pada kriteria filter ini.</div>
+						<div class="text-[11px] text-[#A08F6E]">Coba ganti kategori kendaraan atau ubah filter ketersediaan ke "Semua".</div>
 					</div>
 				{:else}
 					<div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-						{#each filteredGarages as garage (garage.id)}
-							{@const isRented = garage.status === 'used' || (garage.active_end_date && garage.active_end_date >= data.today)}
-							<label
-								class="border rounded-xl p-4.5 transition-all flex flex-col justify-between {isRented ? 'bg-[#FDFBF7] border-[#EAE3D4] opacity-75 cursor-not-allowed' : selectedGarageId === garage.id ? 'border-[#71856A] bg-[#EFF3ED] ring-2 ring-[#71856A] shadow-sm cursor-pointer' : 'border-[#DFD5C2] hover:border-[#BEB092] bg-[#FAF8F4] cursor-pointer'}"
+						{#each displayedGarages as garage (garage.id)}
+							{@const isBooked = isGarageBookedOnSelectedRange(garage, selectedStartDate, calculatedEndDate)}
+							<div
+								class="border rounded-xl p-4.5 transition-all flex flex-col justify-between {isBooked ? 'bg-[#FDFBF7] border-[#EAE3D4]' : selectedGarageId === garage.id ? 'border-[#71856A] bg-[#EFF3ED] ring-2 ring-[#71856A] shadow-sm' : 'border-[#DFD5C2] hover:border-[#BEB092] bg-[#FAF8F4]'}"
 							>
 								<div>
-									<!-- Top Row: Radio + Code + Status Badge -->
+									<!-- Top Row: Radio + Code + Plat + Status Badge -->
 									<div class="flex items-start justify-between gap-2">
-										<div class="flex items-center gap-2.5">
+										<label class="flex items-center gap-2.5 cursor-pointer">
 											<input
 												type="radio"
 												name="garageId"
 												value={garage.id}
 												bind:group={selectedGarageId}
-												disabled={isRented}
-												class="text-[#71856A] focus:ring-[#71856A] accent-[#71856A] disabled:opacity-50"
+												disabled={isBooked}
+												class="text-[#71856A] focus:ring-[#71856A] accent-[#71856A] disabled:opacity-40"
 											/>
 											<div>
 												<span class="font-mono font-extrabold text-base text-[#383123]">{garage.code}</span>
@@ -337,41 +513,83 @@
 													{garage.license_plate || 'Bebas Plat'}
 												</span>
 											</div>
-										</div>
+										</label>
 
-										<!-- Status Badge: Available vs Rented with Dates -->
-										{#if isRented}
+										<!-- Status Badge -->
+										{#if isBooked}
 											<div class="text-right">
-												<span class="text-[10px] font-mono font-bold px-2 py-0.5 rounded-full bg-rose-50 text-rose-700 border border-rose-200 block">
-													⛔ Sudah Dirental
-												</span>
-												<span class="text-[10px] text-rose-600 font-mono mt-0.5 block">
-													{garage.active_start_date} s/d {garage.active_end_date}
+												<span class="text-[10px] font-mono font-bold px-2 py-0.5 rounded-full bg-rose-50 text-rose-700 border border-rose-200 inline-block">
+													⛔ Sedang Dirental
 												</span>
 											</div>
 										{:else}
-											<span class="text-[10px] font-mono font-bold px-2 py-0.5 rounded-full bg-[#EFF3ED] text-[#596A53] border border-[#DFE5DC]">
-												✓ Siap Dirental
-											</span>
+											<div class="text-right">
+												<span class="text-[10px] font-mono font-bold px-2 py-0.5 rounded-full bg-[#EFF3ED] text-[#596A53] border border-[#DFE5DC] inline-block">
+													✓ Ready Siap Pakai
+												</span>
+											</div>
 										{/if}
 									</div>
 
 									<!-- Middle: Vehicle Brand & Model + Type -->
 									<div class="mt-3 bg-white p-3 rounded-lg border border-[#F4EFE7]">
-										<div class="font-bold text-sm text-[#383123]">
-											{garage.vehicle_name || `${garage.car_type || 'Kendaraan'} ${garage.code}`}
+										<div class="flex items-start justify-between gap-2">
+											<div>
+												<div class="font-bold text-sm text-[#383123]">
+													{garage.vehicle_name || `${garage.car_type || 'Kendaraan'} ${garage.code}`}
+												</div>
+												<div class="text-xs text-[#6B5E45] mt-0.5 flex items-center gap-3">
+													<span>Tipe: <strong class="text-[#383123]">{garage.car_type || 'Standar'}</strong></span>
+													<span class="capitalize text-[11px] text-[#A08F6E]">{garage.type.replace('_', ' ')}</span>
+												</div>
+											</div>
+											<button
+												type="button"
+												onclick={() => (scheduleModalGarage = garage)}
+												class="text-[11px] text-[#71856A] hover:text-[#596A53] font-bold hover:underline shrink-0 flex items-center gap-1"
+											>
+												<Icon name="calendar" size={12} />
+												<span>Cek Jadwal</span>
+											</button>
 										</div>
-										<div class="text-xs text-[#6B5E45] mt-0.5 flex items-center justify-between">
-											<span>Tipe: <strong class="text-[#383123]">{garage.car_type || 'Standar'}</strong></span>
-											<span class="capitalize text-[11px] text-[#A08F6E]">{garage.type.replace('_', ' ')}</span>
-										</div>
+
 										{#if garage.type === 'mobil_listrik'}
-											<div class="text-[11px] text-[#596A53] font-semibold mt-1 flex items-center gap-1">
+											<div class="text-[11px] text-[#596A53] font-semibold mt-1.5 pt-1.5 border-t border-[#F4EFE7] flex items-center gap-1">
 												<Icon name="zap" size={12} />
 												<span>Kapasitas Baterai: {garage.battery_capacity_kwh || 58} kWh (Full Charge Ready)</span>
 											</div>
 										{/if}
 									</div>
+
+									<!-- HIGHLIGHT READY KEMBALI JIKA SEDANG DIRENTAL -->
+									{#if isBooked}
+										<div class="mt-2.5 p-2.5 bg-[#FAF8F4] border border-[#DAC99B] rounded-lg space-y-1.5">
+											<div class="flex items-center justify-between text-xs">
+												<span class="text-[#8A7545] font-semibold">Periode Sewa Aktif:</span>
+												<span class="font-mono text-[#8A7545] font-bold text-[11px]">
+													{formatDateIndo(garage.active_start_date)} s/d {formatDateIndo(garage.active_end_date)}
+												</span>
+											</div>
+											<div class="flex items-center justify-between text-xs pt-1 border-t border-[#EAE3D4]">
+												<span class="font-bold text-[#383123] flex items-center gap-1">
+													<Icon name="clock" size={12} class="text-[#71856A]" />
+													<span>Ready Kembali:</span>
+												</span>
+												<span class="font-mono font-extrabold text-[#71856A] text-xs">
+													{formatDateIndo(garage.next_available_date)}
+													<span class="text-[10px] text-[#877758] font-normal">({getDaysRemainingText(garage.next_available_date, data.today)})</span>
+												</span>
+											</div>
+											<button
+												type="button"
+												onclick={() => scheduleFromReadyDate(garage)}
+												class="w-full mt-1 py-1.5 bg-[#71856A] hover:bg-[#596A53] text-white rounded text-[11px] font-bold transition flex items-center justify-center gap-1.5 shadow-xs btn-interactive"
+											>
+												<Icon name="calendar" size={12} />
+												<span>⚡ Jadwalkan Mulai {formatDateIndo(garage.next_available_date)}</span>
+											</button>
+										</div>
+									{/if}
 								</div>
 
 								<!-- Bottom: Pricing -->
@@ -393,7 +611,7 @@
 										</div>
 									{/if}
 								</div>
-							</label>
+							</div>
 						{/each}
 					</div>
 				{/if}
@@ -438,8 +656,11 @@
 							<div class="text-xs text-[#383123] font-bold">
 								{selectedGarage.vehicle_name} <span class="text-[#877758] font-normal font-mono">({selectedGarage.license_plate || 'Bebas Plat'})</span>
 							</div>
+							<div class="text-[11px] text-[#71856A] font-semibold">
+								Masa Sewa: {formatDateIndo(selectedStartDate)} s/d {formatDateIndo(calculatedEndDate)}
+							</div>
 						{/if}
-						<div class="flex justify-between text-[#6B5E45]">
+						<div class="flex justify-between text-[#6B5E45] border-t border-[#EAE3D4] pt-2">
 							<span>Biaya Sewa ({duration} {rentalType === 'harian' ? 'hari' : 'bulan'}):</span>
 							<span class="font-mono font-bold text-[#383123]">{formatRupiah(costCalculation.baseCost)}</span>
 						</div>
@@ -470,3 +691,137 @@
 		</form>
 	{/if}
 </div>
+
+<!-- MODAL POPUP: CEK JADWAL & KALENDER KETERSEDIAAN ARMADA -->
+{#if scheduleModalGarage}
+	<div class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-xs">
+		<div class="bg-white rounded-2xl border border-[#DFD5C2] max-w-lg w-full p-6 shadow-xl space-y-5 animate-in fade-in zoom-in-95 duration-150">
+			<!-- Modal Header -->
+			<div class="flex items-start justify-between border-b border-[#F4EFE7] pb-3.5">
+				<div>
+					<div class="flex items-center gap-2">
+						<span class="font-mono font-extrabold text-xs px-2.5 py-0.5 bg-[#383123] text-white rounded">
+							{scheduleModalGarage.code}
+						</span>
+						<h3 class="font-bold text-base text-[#383123]">
+							{scheduleModalGarage.vehicle_name}
+						</h3>
+					</div>
+					<div class="text-xs text-[#6B5E45] mt-1 flex items-center gap-3">
+						<span>Plat: <strong class="font-mono text-[#383123]">{scheduleModalGarage.license_plate || 'Bebas Plat'}</strong></span>
+						<span>Tipe: <strong class="text-[#383123]">{scheduleModalGarage.car_type || 'Standar'}</strong></span>
+					</div>
+				</div>
+				<button
+					type="button"
+					onclick={() => (scheduleModalGarage = null)}
+					class="p-1 rounded-lg text-[#877758] hover:bg-[#FAF8F4] transition"
+				>
+					<Icon name="x" size={18} />
+				</button>
+			</div>
+
+			<!-- Status Saat Ini & Kapan Ready -->
+			<div class="space-y-3">
+				<div class="p-4 rounded-xl border {scheduleModalGarage.active_end_date ? 'bg-[#FDFBF7] border-[#DAC99B]' : 'bg-[#EFF3ED] border-[#C2CCBC]'}">
+					<div class="flex items-center justify-between">
+						<span class="text-xs font-bold uppercase tracking-wider {scheduleModalGarage.active_end_date ? 'text-[#8A7545]' : 'text-[#596A53]'}">
+							{scheduleModalGarage.active_end_date ? 'Status: Sedang Dalam Masa Sewa' : 'Status: Siap Dirental Hari Ini'}
+						</span>
+						<span class="text-xs font-mono font-bold px-2.5 py-0.5 rounded-full {scheduleModalGarage.active_end_date ? 'bg-rose-50 text-rose-700 border border-rose-200' : 'bg-white text-[#596A53] border border-[#DFE5DC]'}">
+							{scheduleModalGarage.active_end_date ? 'Terisi' : 'Tersedia'}
+						</span>
+					</div>
+
+					{#if scheduleModalGarage.active_end_date}
+						<div class="mt-3 text-xs space-y-1.5 border-t border-[#EAE3D4] pt-2.5">
+							<div class="flex justify-between">
+								<span class="text-[#6B5E45]">Masa Sewa Berjalan:</span>
+								<span class="font-mono font-bold text-[#383123]">
+									{formatDateIndo(scheduleModalGarage.active_start_date)} s/d {formatDateIndo(scheduleModalGarage.active_end_date)}
+								</span>
+							</div>
+							{#if scheduleModalGarage.active_tenant_name}
+								<div class="flex justify-between">
+									<span class="text-[#6B5E45]">Penyewa Saat Ini:</span>
+									<span class="font-bold text-[#383123]">{scheduleModalGarage.active_tenant_name}</span>
+								</div>
+							{/if}
+							<div class="flex justify-between items-center bg-white p-2.5 rounded-lg border border-[#DFD5C2] mt-2">
+								<span class="font-bold text-[#383123] flex items-center gap-1.5">
+									<Icon name="check" size={14} class="text-[#71856A]" />
+									<span>Ready Kembali Pada:</span>
+								</span>
+								<span class="font-mono font-extrabold text-[#71856A] text-sm">
+									{formatDateIndo(scheduleModalGarage.next_available_date)}
+								</span>
+							</div>
+						</div>
+					{:else}
+						<div class="mt-2 text-xs text-[#596A53] leading-relaxed">
+							Kendaraan ini belum terikat jadwal sewa aktif dan siap dirental kapan saja mulai hari ini ({formatDateIndo(data.today)}).
+						</div>
+					{/if}
+				</div>
+
+				<!-- Pratinjau Ketersediaan 7 Hari ke Depan -->
+				<div>
+					<span class="text-xs font-bold text-[#4F4532] block mb-2">Pratinjau Ketersediaan 7 Hari Kedepan</span>
+					<div class="grid grid-cols-7 gap-1.5 text-center">
+						{#each Array.from({ length: 7 }) as _, i}
+							{@const dayDate = getOffsetDate(i)}
+							{@const isDayBooked = isGarageBookedOnSelectedRange(scheduleModalGarage, dayDate, dayDate)}
+							<div class="p-2 rounded-lg border text-[10px] {isDayBooked ? 'bg-rose-50 border-rose-200 text-rose-700' : 'bg-[#EFF3ED] border-[#C2CCBC] text-[#2E382A]'}">
+								<div class="font-bold">{i === 0 ? 'Hari Ini' : `+${i}h`}</div>
+								<div class="font-mono text-[9px] mt-0.5">{dayDate.split('-')[2]}/{dayDate.split('-')[1]}</div>
+								<div class="font-extrabold mt-1 text-[11px]">{isDayBooked ? '✕' : '✓'}</div>
+							</div>
+						{/each}
+					</div>
+					<div class="flex items-center justify-between text-[10px] text-[#877758] mt-2 px-1">
+						<span>✓ = Unit Siap Dirental</span>
+						<span>✕ = Terisi / Sedang Dirental</span>
+					</div>
+				</div>
+			</div>
+
+			<!-- Modal Footer -->
+			<div class="flex items-center justify-end gap-2.5 border-t border-[#F4EFE7] pt-3.5">
+				<button
+					type="button"
+					onclick={() => (scheduleModalGarage = null)}
+					class="px-4 py-2 bg-[#FAF8F4] hover:bg-[#EFE8D6] text-[#4F4532] text-xs font-bold rounded-lg border border-[#DFD5C2] transition btn-interactive"
+				>
+					Tutup
+				</button>
+
+				{#if scheduleModalGarage.active_end_date}
+					<button
+						type="button"
+						onclick={() => {
+							scheduleFromReadyDate(scheduleModalGarage);
+							scheduleModalGarage = null;
+						}}
+						class="px-4 py-2 bg-[#71856A] hover:bg-[#596A53] text-white text-xs font-bold rounded-lg transition shadow-xs flex items-center gap-1.5 btn-interactive"
+					>
+						<Icon name="calendar" size={13} />
+						<span>Pilih Mulai {formatDateIndo(scheduleModalGarage.next_available_date)}</span>
+					</button>
+				{:else}
+					<button
+						type="button"
+						onclick={() => {
+							selectedStartDate = data.today;
+							selectedGarageId = scheduleModalGarage.id;
+							scheduleModalGarage = null;
+						}}
+						class="px-4 py-2 bg-[#71856A] hover:bg-[#596A53] text-white text-xs font-bold rounded-lg transition shadow-xs flex items-center gap-1.5 btn-interactive"
+					>
+						<Icon name="check" size={13} />
+						<span>Pilih Unit Ini Sekarang</span>
+					</button>
+				{/if}
+			</div>
+		</div>
+	</div>
+{/if}
