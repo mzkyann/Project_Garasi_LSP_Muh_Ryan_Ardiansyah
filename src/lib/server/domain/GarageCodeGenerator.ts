@@ -62,3 +62,4 @@ export class GarageCodeGenerator {
 		return codes;
 	}
 }
+

@@ -297,3 +297,4 @@ Pengujian dijalankan dengan perintah `npm run test` (Vitest):
    - **Admin:** `admin@garasi.id` | Password: `admin123`
    - **Penyewa (Aktif):** `budi@gmail.com` | Password: `budi123`
    - **Penyewa (Pending):** `ani@gmail.com` | Password: `ani123`
+

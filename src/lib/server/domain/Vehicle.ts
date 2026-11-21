@@ -75,3 +75,4 @@ export class ElectricCar extends Vehicle {
 		return this._batteryCapacityKwh;
 	}
 }
+

@@ -36,11 +36,13 @@ export const actions: Actions = {
 
 		const data = await request.formData();
 		const userId = parseInt(data.get('userId')?.toString() || '0', 10);
-		const decision = data.get('decision')?.toString();
+		const rawDecision = data.get('decision')?.toString();
 
-		if (!userId || !['approved', 'rejected'].includes(decision || '')) {
+		if (!userId || (rawDecision !== 'approved' && rawDecision !== 'rejected')) {
 			return fail(400, { error: 'Data verifikasi tidak valid' });
 		}
+
+		const decision: 'approved' | 'rejected' = rawDecision;
 
 		db.prepare('UPDATE users SET status = ? WHERE id = ?').run(decision, userId);
 

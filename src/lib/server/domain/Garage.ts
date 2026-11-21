@@ -96,3 +96,4 @@ export class ElectricCarGarage extends Garage {
 		return this._electricityPricePerKwh;
 	}
 }
+
