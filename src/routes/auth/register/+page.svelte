@@ -7,17 +7,17 @@
 </script>
 
 <svelte:head>
-	<title>Pendaftaran Penyewa - SIM-GARASI</title>
+	<title>Daftar Akun Penyewa - GARTA Takalar</title>
 </svelte:head>
 
 <div class="max-w-lg mx-auto my-6">
-	<div class="bg-white rounded-xl shadow-xs border border-[#DFD5C2] overflow-hidden card-hover">
+	<div class="bg-white rounded-2xl shadow-sm border border-[#DFD5C2] overflow-hidden card-hover">
 		<div class="p-6 border-b border-[#F4EFE7] bg-[#FAF8F4]">
-			<div class="inline-flex items-center gap-1.5 text-[11px] font-bold text-[#71856A] uppercase tracking-wider mb-1">
+			<div class="inline-flex items-center gap-1.5 text-[11px] font-bold text-[#71856A] uppercase tracking-wider mb-1 font-mono">
 				<Icon name="shield" size={13} />
-				<span>Standar Sertifikasi KTP 16 Digit</span>
+				<span>Standar Sertifikasi KTP 16 Digit • GARTA Takalar</span>
 			</div>
-			<h2 class="text-base font-extrabold text-[#383123]">Formulir Pendaftaran Penyewa Baru</h2>
+			<h2 class="text-lg font-extrabold text-[#383123]">Formulir Pendaftaran Penyewa Baru</h2>
 			<p class="text-xs text-[#6B5E45] mt-1 leading-relaxed">
 				Lengkapi data identitas resmi sesuai KTP Anda. Akun akan melalui proses verifikasi oleh tim administrator.
 			</p>

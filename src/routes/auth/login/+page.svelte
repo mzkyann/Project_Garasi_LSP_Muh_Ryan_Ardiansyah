@@ -7,14 +7,18 @@
 </script>
 
 <svelte:head>
-	<title>Masuk Sistem - SIM-GARASI</title>
+	<title>Masuk - GARTA (Garasi Takalar)</title>
 </svelte:head>
 
 <div class="max-w-md mx-auto my-8 space-y-5">
 	<!-- Main Login Card -->
-	<div class="bg-white rounded-xl shadow-xs border border-[#DFD5C2] overflow-hidden card-hover">
+	<div class="bg-white rounded-2xl shadow-sm border border-[#DFD5C2] overflow-hidden card-hover">
 		<div class="p-6 border-b border-[#F4EFE7] bg-[#FAF8F4]">
-			<h2 class="text-base font-extrabold text-[#383123]">Masuk ke Portal SIM-GARASI</h2>
+			<div class="flex items-center gap-2 text-xs font-bold text-[#71856A] uppercase tracking-wider font-mono mb-1">
+				<Icon name="shield" size={13} />
+				<span>GARTA TAKALAR AUTH</span>
+			</div>
+			<h2 class="text-lg font-extrabold text-[#383123]">Masuk ke Portal GARTA</h2>
 			<p class="text-xs text-[#6B5E45] mt-1">Masukkan alamat email terdaftar dan kata sandi Anda</p>
 		</div>
 

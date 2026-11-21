@@ -22,29 +22,31 @@
 </script>
 
 <svelte:head>
-	<title>Persetujuan Sewa & ACC - Admin SIM-GARASI</title>
+	<title>Persetujuan Sewa (ACC) - GARTA Takalar</title>
 </svelte:head>
 
 <div class="space-y-6 py-2">
-	<!-- Page Header -->
-	<div class="bg-white rounded-xl border border-[#DFD5C2] p-6 shadow-xs flex flex-col md:flex-row items-start md:items-center justify-between gap-4 card-hover">
-		<div>
-			<div class="flex items-center gap-2 text-xs font-bold text-[#71856A] uppercase tracking-wider">
-				<Icon name="shield" size={14} />
-				<span>Panel Administrasi</span>
+	<!-- Page Header with Dark Automotive Palette -->
+	<div class="bg-gradient-to-r from-[#242D21] via-[#2D382A] to-[#1C2319] text-white rounded-2xl p-6 sm:p-7 shadow-md border border-[#3E4F39] flex flex-col md:flex-row items-start md:items-center justify-between gap-5 relative overflow-hidden">
+		<div class="space-y-1.5 relative z-10">
+			<div class="inline-flex items-center gap-2 text-xs font-bold text-[#E5C772] uppercase tracking-wider font-mono">
+				<Icon name="shield" size={13} />
+				<span>Panel Administrasi GARTA Takalar</span>
 			</div>
-			<h1 class="text-xl font-extrabold text-[#383123] mt-1">Persetujuan & ACC Transaksi Sewa</h1>
-			<p class="text-xs text-[#6B5E45] mt-0.5 leading-relaxed">
-				Verifikasi permohonan sewa baru dan permohonan perpanjangan dari penyewa, periksa bukti pelunasan, lalu putuskan persetujuan (ACC).
+			<h1 class="text-2xl font-extrabold text-[#FAF8F4] tracking-tight">
+				Persetujuan & ACC Transaksi Sewa
+			</h1>
+			<p class="text-xs text-[#D1DDCE] leading-relaxed max-w-xl">
+				Verifikasi permohonan sewa baru dan perpanjangan dari pelanggan, periksa struk bukti transfer pembayaran, lalu putuskan persetujuan (ACC) atau tolak.
 			</p>
 		</div>
 
 		<!-- Action Tabs Switcher -->
-		<div class="flex items-center gap-2 flex-wrap">
+		<div class="flex items-center gap-2 flex-wrap relative z-10">
 			<button
 				type="button"
 				onclick={() => (activeTab = 'rentals')}
-				class="px-4 py-2 text-xs font-bold rounded-lg border transition-all btn-interactive flex items-center gap-1.5 {activeTab === 'rentals' ? 'bg-[#71856A] text-white border-[#71856A] shadow-xs' : 'bg-[#FAF8F4] text-[#4F4532] border-[#DFD5C2] hover:bg-[#EFE8D6]'}"
+				class="px-4 py-2 text-xs font-bold rounded-xl border transition-all btn-interactive flex items-center gap-1.5 {activeTab === 'rentals' ? 'bg-[#71856A] text-white border-[#71856A] shadow-xs' : 'bg-[#384634] text-[#D1DDCE] border-[#4F624A] hover:bg-[#485942]'}"
 			>
 				<Icon name="file-text" size={13} />
 				<span>Sewa Baru ({data.pendingRentals.length})</span>
@@ -53,7 +55,7 @@
 			<button
 				type="button"
 				onclick={() => (activeTab = 'extensions')}
-				class="px-4 py-2 text-xs font-bold rounded-lg border transition-all btn-interactive flex items-center gap-1.5 {activeTab === 'extensions' ? 'bg-[#71856A] text-white border-[#71856A] shadow-xs' : 'bg-[#FAF8F4] text-[#4F4532] border-[#DFD5C2] hover:bg-[#EFE8D6]'}"
+				class="px-4 py-2 text-xs font-bold rounded-xl border transition-all btn-interactive flex items-center gap-1.5 {activeTab === 'extensions' ? 'bg-[#71856A] text-white border-[#71856A] shadow-xs' : 'bg-[#384634] text-[#D1DDCE] border-[#4F624A] hover:bg-[#485942]'}"
 			>
 				<Icon name="clock" size={13} />
 				<span>Perpanjangan ({data.pendingExtensions.length})</span>
@@ -62,7 +64,7 @@
 			<button
 				type="button"
 				onclick={() => (activeTab = 'active')}
-				class="px-4 py-2 text-xs font-bold rounded-lg border transition-all btn-interactive flex items-center gap-1.5 {activeTab === 'active' ? 'bg-[#71856A] text-white border-[#71856A] shadow-xs' : 'bg-[#FAF8F4] text-[#4F4532] border-[#DFD5C2] hover:bg-[#EFE8D6]'}"
+				class="px-4 py-2 text-xs font-bold rounded-xl border transition-all btn-interactive flex items-center gap-1.5 {activeTab === 'active' ? 'bg-[#71856A] text-white border-[#71856A] shadow-xs' : 'bg-[#384634] text-[#D1DDCE] border-[#4F624A] hover:bg-[#485942]'}"
 			>
 				<Icon name="check" size={13} />
 				<span>Sewa Berjalan ({data.activeRentals.length})</span>

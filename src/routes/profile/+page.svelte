@@ -18,7 +18,7 @@
 </script>
 
 <svelte:head>
-	<title>Profil Saya - SIM-GARASI</title>
+	<title>Profil Pengguna - GARTA Takalar</title>
 </svelte:head>
 
 <div class="max-w-2xl mx-auto my-6 space-y-6">
