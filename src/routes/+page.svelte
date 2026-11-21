@@ -92,37 +92,37 @@
 	<title>GARTA - Garasi Takalar | Smart Safe Garage & EV Hub</title>
 </svelte:head>
 
-<div class="space-y-16 py-4">
+<div class="space-y-14 py-2">
 	<!-- ================= 1. HERO SECTION DENGAN 3D ISOMETRIC GARAGE CARD ================= -->
-	<section class="relative overflow-hidden rounded-3xl bg-gradient-to-br from-[#0F172A] via-[#0A0E17] to-[#04060A] border border-white/10 text-white p-8 sm:p-14 shadow-[0_20px_50px_rgba(0,0,0,0.8)]">
+	<section class="relative overflow-hidden rounded-3xl bg-gradient-to-br from-[#2C2518] via-[#222920] to-[#161A14] border border-[#8B774F]/40 text-[#EDE8D2] p-8 sm:p-14 shadow-2xl">
 		<!-- Background ambient mesh glow -->
-		<div class="absolute -top-32 -left-32 w-96 h-96 rounded-full bg-emerald-500/15 blur-3xl pointer-events-none"></div>
-		<div class="absolute -bottom-32 -right-32 w-96 h-96 rounded-full bg-amber-500/15 blur-3xl pointer-events-none"></div>
-		<div class="absolute top-1/2 left-1/3 w-64 h-64 rounded-full bg-cyan-500/10 blur-3xl pointer-events-none"></div>
+		<div class="absolute -top-32 -left-32 w-96 h-96 rounded-full bg-[#8B774F]/25 blur-3xl pointer-events-none"></div>
+		<div class="absolute -bottom-32 -right-32 w-96 h-96 rounded-full bg-[#DCCFA6]/20 blur-3xl pointer-events-none"></div>
+		<div class="absolute top-1/2 left-1/3 w-64 h-64 rounded-full bg-[#8F987E]/20 blur-3xl pointer-events-none"></div>
 
 		<div class="relative z-10 grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
 			<!-- Hero Left: Headline, Badge, CTAs, Trust Elements -->
 			<div class="lg:col-span-7 space-y-7">
 				<!-- Pill Tagline Takalar with Ping Indicator -->
-				<div class="inline-flex items-center gap-2.5 px-4 py-1.5 rounded-full bg-slate-900/90 border border-slate-700/80 text-xs font-semibold shadow-inner">
+				<div class="inline-flex items-center gap-2.5 px-4 py-1.5 rounded-full bg-[#353F32]/90 border border-[#8F987E]/50 text-xs font-semibold shadow-inner">
 					<span class="relative flex h-2.5 w-2.5">
-						<span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
-						<span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-amber-500"></span>
+						<span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#DCCFA6] opacity-75"></span>
+						<span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-[#DCCFA6]"></span>
 					</span>
-					<span class="text-amber-400 font-mono font-bold tracking-wider">GARTA TAKALAR</span>
-					<span class="text-slate-600">•</span>
-					<span class="text-slate-300">Smart Safe Garage & EV Charging Hub</span>
+					<span class="text-[#DCCFA6] font-mono font-bold tracking-wider">GARTA TAKALAR</span>
+					<span class="text-[#8F987E]">•</span>
+					<span class="text-[#EDE8D2]">Smart Safe Garage & EV Charging Hub</span>
 				</div>
 
 				<!-- Main Headline -->
-				<h1 class="text-3xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight text-white leading-[1.12]">
+				<h1 class="text-3xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight text-white leading-[1.15]">
 					Penitipan Kendaraan <br/>
-					<span class="text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 via-teal-300 to-cyan-400">Paling Aman & Modern</span> <br/>
+					<span class="text-transparent bg-clip-text bg-gradient-to-r from-[#DCCFA6] via-[#EDE8D2] to-[#8F987E]">Paling Aman & Modern</span> <br/>
 					di Takalar
 				</h1>
 
 				<!-- Subheadline -->
-				<p class="text-sm sm:text-base text-slate-300 leading-relaxed max-w-xl">
+				<p class="text-sm sm:text-base text-[#DFE3D9] leading-relaxed max-w-xl">
 					Solusi sewa garasi indoor terintegrasi untuk <strong>sepeda, motor, mobil konvensional</strong>, hingga <strong>mobil listrik (EV)</strong> dengan fasilitas SPKLU Wallbox otomatis, sensor keamanan, dan pengawasan CCTV 24 Jam.
 				</p>
 
@@ -130,7 +130,7 @@
 				<div class="flex flex-wrap items-center gap-4 pt-2">
 					<a
 						href="/penyewa/sewa-baru"
-						class="px-7 py-3.5 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-white font-bold rounded-xl text-sm transition-all shadow-[0_0_25px_rgba(16,185,129,0.35)] hover:shadow-[0_0_35px_rgba(16,185,129,0.5)] flex items-center gap-2.5 btn-interactive"
+						class="px-7 py-3.5 bg-[#8F987E] hover:bg-[#778267] text-white font-bold rounded-xl text-sm transition-all shadow-lg shadow-[#161A14]/50 flex items-center gap-2.5 btn-interactive"
 					>
 						<Icon name="plus" size={17} />
 						<span>Sewa Slot Garasi Sekarang</span>
@@ -138,25 +138,25 @@
 
 					<a
 						href="#kapasitas"
-						class="px-6 py-3.5 bg-slate-900/80 hover:bg-slate-800 text-slate-200 font-semibold rounded-xl text-sm transition-all border border-slate-700/80 shadow-sm flex items-center gap-2 btn-interactive"
+						class="px-6 py-3.5 bg-[#353F32]/80 hover:bg-[#424F3F] text-[#EDE8D2] font-semibold rounded-xl text-sm transition-all border border-[#8F987E]/50 shadow-sm flex items-center gap-2 btn-interactive"
 					>
 						<span>Cek Ketersediaan Slot ↓</span>
 					</a>
 				</div>
 
 				<!-- Trust Elements Mini Bar -->
-				<div class="grid grid-cols-3 gap-4 pt-6 border-t border-slate-800/80 text-xs font-mono">
-					<div class="p-3 rounded-xl bg-slate-900/50 border border-slate-800">
+				<div class="grid grid-cols-3 gap-4 pt-6 border-t border-[#423825] text-xs font-mono">
+					<div class="p-3 rounded-xl bg-[#222920]/70 border border-[#8F987E]/30">
 						<span class="text-white font-extrabold block text-base sm:text-lg">{data.totalCount} Slot</span>
-						<span class="text-[11px] text-slate-400">Total Kapasitas</span>
+						<span class="text-[11px] text-[#C3C9B8]">Total Kapasitas</span>
 					</div>
-					<div class="p-3 rounded-xl bg-slate-900/50 border border-slate-800">
-						<span class="text-emerald-400 font-extrabold block text-base sm:text-lg">{data.availableCount} Tersedia</span>
-						<span class="text-[11px] text-slate-400">Siap Pakai Hari Ini</span>
+					<div class="p-3 rounded-xl bg-[#222920]/70 border border-[#8F987E]/30">
+						<span class="text-[#DCCFA6] font-extrabold block text-base sm:text-lg">{data.availableCount} Tersedia</span>
+						<span class="text-[11px] text-[#C3C9B8]">Siap Pakai Hari Ini</span>
 					</div>
-					<div class="p-3 rounded-xl bg-slate-900/50 border border-slate-800">
-						<span class="text-amber-400 font-extrabold block text-base sm:text-lg">24/7 Live</span>
-						<span class="text-[11px] text-slate-400">CCTV & Keamanan</span>
+					<div class="p-3 rounded-xl bg-[#222920]/70 border border-[#8F987E]/30">
+						<span class="text-[#8F987E] font-extrabold block text-base sm:text-lg">24/7 Live</span>
+						<span class="text-[11px] text-[#C3C9B8]">CCTV & Keamanan</span>
 					</div>
 				</div>
 			</div>
@@ -172,79 +172,79 @@
 					onmouseleave={handleMouseLeave}
 				>
 					<div
-						class="w-full rounded-3xl bg-gradient-to-b from-slate-900 via-[#0D1526] to-[#080D18] border-2 border-white/10 p-6 shadow-2xl relative overflow-hidden transition-all hover:border-emerald-500/40"
+						class="w-full rounded-3xl bg-gradient-to-b from-[#222920] to-[#161A14] border-2 border-[#8B774F]/60 p-6 shadow-2xl relative overflow-hidden transition-all hover:border-[#DCCFA6]"
 						style="transform-style: preserve-3d; transform: rotateX({cardRotateX}deg) rotateY({cardRotateY}deg) scale3d({isHovering3D ? 1.03 : 1}, {isHovering3D ? 1.03 : 1}, 1);"
 					>
 						<!-- Specular Light Effect -->
-						<div class="absolute inset-0 bg-gradient-to-tr from-transparent via-white/5 to-white/15 pointer-events-none rounded-3xl"></div>
+						<div class="absolute inset-0 bg-gradient-to-tr from-transparent via-white/5 to-white/10 pointer-events-none rounded-3xl"></div>
 
 						<!-- Floating 3D Badge Status -->
-						<div class="flex items-center justify-between pb-4 border-b border-slate-800" style="transform: translateZ(35px);">
+						<div class="flex items-center justify-between pb-4 border-b border-[#423825]" style="transform: translateZ(35px);">
 							<div class="flex items-center gap-2">
-								<div class="w-3 h-3 rounded-full bg-emerald-400 animate-pulse"></div>
-								<span class="font-mono text-xs font-bold text-white tracking-wider">GARTA SMART VISUALIZER</span>
+								<div class="w-3 h-3 rounded-full bg-[#8F987E] animate-pulse"></div>
+								<span class="font-mono text-xs font-bold text-white tracking-wider">GARTA 3D GARAGE HUB</span>
 							</div>
-							<span class="text-[10px] font-mono px-2.5 py-1 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 font-bold shadow-xs">
-								3D Live Bay
+							<span class="text-[10px] font-mono px-2.5 py-1 rounded-full bg-[#DCCFA6]/20 text-[#DCCFA6] border border-[#DCCFA6]/40 font-bold">
+								Live Bay
 							</span>
 						</div>
 
 						<!-- 3D Isometric Garage Bay Visualizer -->
 						<div class="py-6 space-y-3.5" style="transform: translateZ(25px);">
 							<!-- Bay 1: Slot Sepeda & Motor (S001) -->
-							<div class="p-3.5 rounded-2xl bg-slate-950/80 border border-slate-800/80 flex items-center justify-between hover:border-slate-700 transition">
+							<div class="p-3.5 rounded-2xl bg-[#1B1710] border border-[#423825] flex items-center justify-between hover:border-[#8B774F] transition">
 								<div class="flex items-center gap-3">
-									<div class="w-9 h-9 rounded-xl bg-slate-900 text-slate-300 flex items-center justify-center font-bold border border-slate-700/50">
+									<div class="w-9 h-9 rounded-xl bg-[#2C2518] text-[#DCCFA6] flex items-center justify-center font-bold border border-[#5C4F35]">
 										<Icon name="bike" size={17} />
 									</div>
 									<div>
 										<span class="font-mono font-bold text-xs text-white block">Slot Sepeda & Motor (S)</span>
-										<span class="text-[10px] text-slate-400">Roda Dua Indoor Beratap</span>
+										<span class="text-[10px] text-[#A7AF99]">Roda Dua Indoor Beratap</span>
 									</div>
 								</div>
-								<span class="font-mono text-xs text-emerald-400 font-bold">Rp 20.000<span class="text-[9px] text-slate-500">/hr</span></span>
+								<span class="font-mono text-xs text-[#DCCFA6] font-bold">Rp 20.000<span class="text-[9px] text-[#A7AF99]">/hr</span></span>
 							</div>
 
 							<!-- Bay 2: Slot Mobil Bensin (C001) -->
-							<div class="p-3.5 rounded-2xl bg-slate-950/80 border border-slate-800/80 flex items-center justify-between hover:border-slate-700 transition">
+							<div class="p-3.5 rounded-2xl bg-[#1B1710] border border-[#423825] flex items-center justify-between hover:border-[#8B774F] transition">
 								<div class="flex items-center gap-3">
-									<div class="w-9 h-9 rounded-xl bg-slate-900 text-amber-400 flex items-center justify-center font-bold border border-slate-700/50">
+									<div class="w-9 h-9 rounded-xl bg-[#2C2518] text-[#8B774F] flex items-center justify-center font-bold border border-[#5C4F35]">
 										<Icon name="car" size={17} />
 									</div>
 									<div>
 										<span class="font-mono font-bold text-xs text-white block">Slot Mobil Bensin (C)</span>
-										<span class="text-[10px] text-slate-400">MPV, SUV, Sedan Safe Bay</span>
+										<span class="text-[10px] text-[#A7AF99]">MPV, SUV, Sedan Safe Bay</span>
 									</div>
 								</div>
-								<span class="font-mono text-xs text-amber-400 font-bold">Rp 50.000<span class="text-[9px] text-slate-500">/hr</span></span>
+								<span class="font-mono text-xs text-[#DCCFA6] font-bold">Rp 50.000<span class="text-[9px] text-[#A7AF99]">/hr</span></span>
 							</div>
 
-							<!-- Bay 3: Slot Mobil Listrik & SPKLU (E001) with Animated Glow -->
-							<div class="p-3.5 rounded-2xl bg-gradient-to-r from-slate-950 to-emerald-950/40 border border-emerald-500/40 flex items-center justify-between shadow-lg relative overflow-hidden">
-								<div class="absolute -right-4 -bottom-4 w-20 h-20 rounded-full bg-emerald-500/20 blur-2xl"></div>
+							<!-- Bay 3: Slot Mobil Listrik & SPKLU (E001) -->
+							<div class="p-3.5 rounded-2xl bg-gradient-to-r from-[#1B1710] to-[#222920] border-2 border-[#8F987E] flex items-center justify-between shadow-lg relative overflow-hidden">
+								<div class="absolute -right-4 -bottom-4 w-20 h-20 rounded-full bg-[#8F987E]/20 blur-2xl"></div>
 								<div class="flex items-center gap-3 relative z-10">
-									<div class="w-9 h-9 rounded-xl bg-emerald-500/20 text-emerald-400 flex items-center justify-center font-bold border border-emerald-500/30">
+									<div class="w-9 h-9 rounded-xl bg-[#353F32] text-[#EDE8D2] flex items-center justify-center font-bold border border-[#8F987E]">
 										<Icon name="zap" size={17} />
 									</div>
 									<div>
 										<span class="font-mono font-bold text-xs text-white block flex items-center gap-1.5">
 											<span>Slot EV + SPKLU (E)</span>
-											<span class="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span>
+											<span class="w-2 h-2 rounded-full bg-[#8F987E] animate-ping"></span>
 										</span>
-										<span class="text-[10px] text-emerald-300">Fast Wallbox 22 kW Charger</span>
+										<span class="text-[10px] text-[#C3C9B8]">Fast Wallbox 22 kW Charger</span>
 									</div>
 								</div>
-								<span class="font-mono text-xs text-emerald-300 font-bold relative z-10">Rp 75.000<span class="text-[9px] text-emerald-400/80">/hr</span></span>
+								<span class="font-mono text-xs text-[#DCCFA6] font-bold relative z-10">Rp 75.000<span class="text-[9px] text-[#EDE8D2]">/hr</span></span>
 							</div>
 						</div>
 
 						<!-- Floating 3D Footnote -->
-						<div class="pt-3 border-t border-slate-800 flex items-center justify-between text-[11px] font-mono text-slate-400" style="transform: translateZ(40px);">
-							<span class="flex items-center gap-1.5 text-slate-300">
-								<Icon name="shield" size={13} class="text-amber-400" />
+						<div class="pt-3 border-t border-[#423825] flex items-center justify-between text-[11px] font-mono text-[#A7AF99]" style="transform: translateZ(40px);">
+							<span class="flex items-center gap-1.5 text-[#EDE8D2]">
+								<Icon name="shield" size={13} class="text-[#DCCFA6]" />
 								<span>Sensor Parkir Otomatis</span>
 							</span>
-							<span class="text-amber-400 font-bold">Pattallassang, Takalar</span>
+							<span class="text-[#DCCFA6] font-bold">Pattallassang, Takalar</span>
 						</div>
 					</div>
 				</div>
@@ -254,21 +254,21 @@
 
 	<!-- ================= 2. LIVE CAPACITY MONITOR (BENTO GRID KAPASITAS GARASI) ================= -->
 	<section id="kapasitas" class="space-y-6">
-		<div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-800 pb-4">
+		<div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-[#DCCFA6] pb-4">
 			<div>
-				<div class="flex items-center gap-2 text-xs font-bold text-emerald-400 uppercase tracking-wider">
+				<div class="flex items-center gap-2 text-xs font-bold text-[#8B774F] uppercase tracking-wider">
 					<Icon name="building" size={14} />
 					<span>Ketersediaan Real-Time Takalar</span>
 				</div>
-				<h2 class="text-2xl sm:text-3xl font-extrabold text-white mt-1">
+				<h2 class="text-2xl sm:text-3xl font-extrabold text-[#2C2518] mt-1">
 					Status Kapasitas Slot Garasi Saat Ini
 				</h2>
-				<p class="text-xs sm:text-sm text-slate-400 mt-1">
+				<p class="text-xs sm:text-sm text-[#5C4F35] mt-1">
 					Sistem cerdas GARTA mendeteksi kuota secara otomatis. Jika penuh, perkiraan tanggal slot kosong langsung tertera.
 				</p>
 			</div>
-			<div class="self-start sm:self-auto bg-slate-900/90 px-4 py-2 rounded-xl border border-slate-800 text-xs font-mono text-slate-300 shadow-sm flex items-center gap-2">
-				<span class="w-2 h-2 rounded-full bg-emerald-400"></span>
+			<div class="self-start sm:self-auto bg-white px-4 py-2 rounded-xl border border-[#DCCFA6] text-xs font-mono text-[#2C2518] shadow-xs flex items-center gap-2">
+				<span class="w-2 h-2 rounded-full bg-[#8F987E]"></span>
 				<span>Hari Ini: <strong>{formatDateIndo(data.today)}</strong></span>
 			</div>
 		</div>
@@ -279,12 +279,12 @@
 				{@const isSepeda = stat.type === 'sepeda'}
 				{@const isMobil = stat.type === 'mobil'}
 				{@const isListrik = stat.type === 'mobil_listrik'}
-				<div class="glass-panel rounded-3xl p-6 sm:p-7 flex flex-col justify-between card-hover {stat.isFull ? 'border-rose-500/40 ring-1 ring-rose-500/30' : 'hover:border-emerald-500/40'}">
+				<div class="bg-white rounded-3xl border {stat.isFull ? 'border-rose-300 ring-2 ring-rose-200' : 'border-[#DCCFA6]'} p-6 sm:p-7 flex flex-col justify-between card-hover shadow-xs">
 					<div class="space-y-5">
 						<!-- Top Info Header -->
 						<div class="flex items-center justify-between">
 							<div class="flex items-center gap-3.5">
-								<div class="w-12 h-12 rounded-2xl flex items-center justify-center border {isSepeda ? 'bg-cyan-500/10 text-cyan-400 border-cyan-500/20' : isMobil ? 'bg-amber-500/10 text-amber-400 border-amber-500/20' : 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20'}">
+								<div class="w-12 h-12 rounded-2xl flex items-center justify-center border {isSepeda ? 'bg-[#F7F9F6] text-[#8F987E] border-[#DFE3D9]' : isMobil ? 'bg-[#F7F4EC] text-[#8B774F] border-[#DDD3BC]' : 'bg-[#FAF8F2] text-[#5C4F35] border-[#DCCFA6]'}">
 									{#if isSepeda}
 										<Icon name="bike" size={24} />
 									{:else if isMobil}
@@ -294,51 +294,51 @@
 									{/if}
 								</div>
 								<div>
-									<h3 class="font-extrabold text-base text-white">
+									<h3 class="font-extrabold text-base text-[#2C2518]">
 										{#if isSepeda}Garasi Sepeda & Motor{:else if isMobil}Garasi Mobil Bensin{:else}Garasi Mobil Listrik (EV){/if}
 									</h3>
-									<span class="text-[11px] text-slate-400 font-medium">
+									<span class="text-[11px] text-[#756442] font-medium">
 										{#if isSepeda}Roda Dua Indoor{:else if isMobil}Roda Empat Standar{:else}Dilengkapi Wallbox SPKLU{/if}
 									</span>
 								</div>
 							</div>
-							<span class="font-mono text-xs font-extrabold px-3 py-1 rounded-xl border bg-slate-900 border-slate-700 text-slate-300">
+							<span class="font-mono text-xs font-extrabold px-3 py-1 rounded-xl border bg-[#F8F6F0] border-[#DCCFA6] text-[#2C2518]">
 								Prefix {isSepeda ? 'S' : isMobil ? 'C' : 'E'}
 							</span>
 						</div>
 
 						<!-- Status Ketersediaan Slot -->
 						{#if stat.isFull}
-							<div class="p-4 bg-rose-500/10 border border-rose-500/30 rounded-2xl space-y-2">
+							<div class="p-4 bg-rose-50 border border-rose-200 rounded-2xl space-y-2">
 								<div class="flex items-center justify-between">
-									<span class="font-mono font-extrabold text-xs text-rose-400 flex items-center gap-1.5">
+									<span class="font-mono font-extrabold text-xs text-rose-700 flex items-center gap-1.5">
 										<Icon name="alert" size={14} />
 										<span>⛔ GARASI PENUH</span>
 									</span>
-									<span class="text-[10px] font-mono font-bold bg-slate-900 px-2.5 py-0.5 rounded-md border border-rose-500/30 text-rose-400">
+									<span class="text-[10px] font-mono font-bold bg-white px-2.5 py-0.5 rounded-md border border-rose-200 text-rose-600">
 										0/{stat.total} Kosong
 									</span>
 								</div>
-								<div class="text-[11px] text-slate-300 pt-2 border-t border-rose-500/20 flex items-center justify-between">
+								<div class="text-[11px] text-rose-800 pt-2 border-t border-rose-200/80 flex items-center justify-between">
 									<span>Kosong kembali pada:</span>
-									<strong class="font-mono font-bold text-rose-300">
+									<strong class="font-mono font-bold text-rose-900">
 										{stat.nextEmptyDate ? formatDateIndo(stat.nextEmptyDate) : 'Menunggu Selesai'}
 									</strong>
 								</div>
 							</div>
 						{:else}
-							<div class="p-3.5 bg-emerald-500/10 border border-emerald-500/30 rounded-2xl flex items-center justify-between">
-								<div class="flex items-center gap-2 text-emerald-400 text-xs font-bold">
-									<Icon name="check" size={16} />
+							<div class="p-3.5 bg-[#EFF1EC] border border-[#C3C9B8] rounded-2xl flex items-center justify-between">
+								<div class="flex items-center gap-2 text-[#2C2518] text-xs font-bold">
+									<Icon name="check" size={16} class="text-[#8F987E]" />
 									<span>✓ Tersedia Siap Sewa</span>
 								</div>
-								<span class="text-xs font-mono font-extrabold text-white bg-slate-900 px-3 py-1 rounded-xl border border-emerald-500/30 shadow-xs">
+								<span class="text-xs font-mono font-extrabold text-[#2C2518] bg-white px-3 py-1 rounded-xl border border-[#DFE3D9] shadow-2xs">
 									{stat.available} dari {stat.total} Slot
 								</span>
 							</div>
 						{/if}
 
-						<p class="text-xs text-slate-400 leading-relaxed">
+						<p class="text-xs text-[#5C4F35] leading-relaxed">
 							{#if isSepeda}
 								Tempat parkir beratap anti karat khusus sepeda gowes dan motor. Bebas panas terik & hujan, dengan sistem kunci individual.
 							{:else if isMobil}
@@ -349,29 +349,29 @@
 						</p>
 
 						<!-- Price Breakdown Box -->
-						<div class="space-y-2.5 bg-slate-950/70 p-4 rounded-2xl border border-slate-800 text-xs">
+						<div class="space-y-2.5 bg-[#FAF8F2] p-4 rounded-2xl border border-[#DCCFA6] text-xs">
 							<div class="flex justify-between items-center">
-								<span class="text-slate-400">Tarif Harian:</span>
-								<span class="font-mono font-bold text-white text-sm">{formatRupiah(stat.dailyPrice)} <span class="text-[10px] font-normal text-slate-500">/hari</span></span>
+								<span class="text-[#756442]">Tarif Harian:</span>
+								<span class="font-mono font-bold text-[#2C2518] text-sm">{formatRupiah(stat.dailyPrice)} <span class="text-[10px] font-normal text-[#756442]">/hari</span></span>
 							</div>
-							<div class="flex justify-between items-center border-t border-slate-800/80 pt-2">
-								<span class="text-slate-400">Tarif Bulanan (25x):</span>
-								<span class="font-mono font-bold text-emerald-400">{formatRupiah(stat.monthlyPrice)} <span class="text-[10px] font-normal text-slate-500">/bln</span></span>
+							<div class="flex justify-between items-center border-t border-[#DDD3BC] pt-2">
+								<span class="text-[#756442]">Tarif Bulanan (25x):</span>
+								<span class="font-mono font-bold text-[#8B774F]">{formatRupiah(stat.monthlyPrice)} <span class="text-[10px] font-normal text-[#756442]">/bln</span></span>
 							</div>
 							{#if isListrik}
-								<div class="flex justify-between items-center border-t border-slate-800/80 pt-2 text-cyan-400">
+								<div class="flex justify-between items-center border-t border-[#DDD3BC] pt-2 text-[#4D5C4A]">
 									<span>Tarif Cas Listrik:</span>
-									<span class="font-mono font-bold">{formatRupiah(stat.electricityPrice || 2500)} <span class="text-[10px] font-normal text-slate-400">/kWh</span></span>
+									<span class="font-mono font-bold">{formatRupiah(stat.electricityPrice || 2500)} <span class="text-[10px] font-normal text-[#756442]">/kWh</span></span>
 								</div>
 							{/if}
 						</div>
 					</div>
 
 					<!-- Bottom Action Link -->
-					<div class="mt-6 pt-4 border-t border-slate-800/80">
+					<div class="mt-6 pt-4 border-t border-[#FAF8F2]">
 						<a
 							href="/penyewa/sewa-baru"
-							class="w-full py-3 rounded-xl font-bold text-xs text-center block transition shadow-md btn-interactive {stat.isFull ? 'bg-slate-800 text-slate-400 hover:bg-slate-700' : 'bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white shadow-[0_0_15px_rgba(16,185,129,0.25)]'}"
+							class="w-full py-3 rounded-xl font-bold text-xs text-center block transition shadow-xs btn-interactive {stat.isFull ? 'bg-[#C2B392] text-white hover:bg-[#A8956E]' : 'bg-[#8F987E] hover:bg-[#778267] text-white'}"
 						>
 							{#if stat.isFull}
 								Lihat Antrean Jadwal Kosong
@@ -386,19 +386,19 @@
 	</section>
 
 	<!-- ================= 3. SMART INTERACTIVE FEE CALCULATOR ================= -->
-	<section class="glass-panel-elevated rounded-3xl p-8 sm:p-12 relative overflow-hidden">
+	<section class="bg-white rounded-3xl border border-[#DCCFA6] p-8 sm:p-12 shadow-sm relative overflow-hidden">
 		<!-- Background ambient glow -->
-		<div class="absolute -top-24 -right-24 w-80 h-80 rounded-full bg-cyan-500/10 blur-3xl pointer-events-none"></div>
+		<div class="absolute -top-24 -right-24 w-80 h-80 rounded-full bg-[#DCCFA6]/30 blur-3xl pointer-events-none"></div>
 
 		<div class="max-w-2xl mb-8 relative z-10">
-			<div class="inline-flex items-center gap-2 text-xs font-bold text-amber-400 uppercase tracking-wider mb-1">
+			<div class="inline-flex items-center gap-2 text-xs font-bold text-[#8B774F] uppercase tracking-wider mb-1">
 				<Icon name="clock" size={14} />
 				<span>Simulasi Estimasi Biaya</span>
 			</div>
-			<h2 class="text-2xl sm:text-3xl font-extrabold text-white">
+			<h2 class="text-2xl sm:text-3xl font-extrabold text-[#2C2518]">
 				Kalkulator Sewa Garasi GARTA Takalar
 			</h2>
-			<p class="text-xs sm:text-sm text-slate-300 mt-1">
+			<p class="text-xs sm:text-sm text-[#5C4F35] mt-1">
 				Hitung estimasi pengeluaran penitipan kendaraan Anda secara langsung dan transparan sebelum melakukan pemesanan.
 			</p>
 		</div>
@@ -408,42 +408,42 @@
 			<div class="lg:col-span-7 space-y-6">
 				<!-- 1. Tipe Kendaraan -->
 				<div>
-					<span class="block text-xs font-bold text-slate-300 mb-2.5">1. Pilih Jenis Kendaraan</span>
+					<span class="block text-xs font-bold text-[#423825] mb-2.5">1. Pilih Jenis Kendaraan</span>
 					<div class="grid grid-cols-3 gap-3">
 						<button
 							type="button"
 							onclick={() => (simVehicleType = 'sepeda')}
-							class="p-4 rounded-2xl border text-left transition-all btn-interactive {simVehicleType === 'sepeda' ? 'bg-cyan-500/15 border-cyan-400 ring-2 ring-cyan-400/50 text-white shadow-[0_0_15px_rgba(6,182,212,0.2)]' : 'bg-slate-900/60 border-slate-800 text-slate-400 hover:border-slate-700'}"
+							class="p-4 rounded-2xl border text-left transition-all btn-interactive {simVehicleType === 'sepeda' ? 'bg-[#EFF1EC] border-[#8F987E] ring-2 ring-[#8F987E] text-[#2C2518]' : 'bg-[#FAF8F2] border-[#DCCFA6] text-[#756442]'}"
 						>
 							<div class="font-bold text-xs flex items-center gap-2">
-								<Icon name="bike" size={16} class={simVehicleType === 'sepeda' ? 'text-cyan-400' : 'text-slate-400'} />
+								<Icon name="bike" size={16} class={simVehicleType === 'sepeda' ? 'text-[#8F987E]' : 'text-[#756442]'} />
 								<span>Motor / Sepeda</span>
 							</div>
-							<div class="text-[11px] font-mono text-cyan-400 font-semibold mt-1.5">Rp 20.000/hr</div>
+							<div class="text-[11px] font-mono text-[#8B774F] font-semibold mt-1.5">Rp 20.000/hr</div>
 						</button>
 
 						<button
 							type="button"
 							onclick={() => (simVehicleType = 'mobil')}
-							class="p-4 rounded-2xl border text-left transition-all btn-interactive {simVehicleType === 'mobil' ? 'bg-amber-500/15 border-amber-400 ring-2 ring-amber-400/50 text-white shadow-[0_0_15px_rgba(245,158,11,0.2)]' : 'bg-slate-900/60 border-slate-800 text-slate-400 hover:border-slate-700'}"
+							class="p-4 rounded-2xl border text-left transition-all btn-interactive {simVehicleType === 'mobil' ? 'bg-[#EFF1EC] border-[#8F987E] ring-2 ring-[#8F987E] text-[#2C2518]' : 'bg-[#FAF8F2] border-[#DCCFA6] text-[#756442]'}"
 						>
 							<div class="font-bold text-xs flex items-center gap-2">
-								<Icon name="car" size={16} class={simVehicleType === 'mobil' ? 'text-amber-400' : 'text-slate-400'} />
+								<Icon name="car" size={16} class={simVehicleType === 'mobil' ? 'text-[#8B774F]' : 'text-[#756442]'} />
 								<span>Mobil Bensin</span>
 							</div>
-							<div class="text-[11px] font-mono text-amber-400 font-semibold mt-1.5">Rp 50.000/hr</div>
+							<div class="text-[11px] font-mono text-[#8B774F] font-semibold mt-1.5">Rp 50.000/hr</div>
 						</button>
 
 						<button
 							type="button"
 							onclick={() => (simVehicleType = 'mobil_listrik')}
-							class="p-4 rounded-2xl border text-left transition-all btn-interactive {simVehicleType === 'mobil_listrik' ? 'bg-emerald-500/15 border-emerald-400 ring-2 ring-emerald-400/50 text-white shadow-[0_0_15px_rgba(16,185,129,0.2)]' : 'bg-slate-900/60 border-slate-800 text-slate-400 hover:border-slate-700'}"
+							class="p-4 rounded-2xl border text-left transition-all btn-interactive {simVehicleType === 'mobil_listrik' ? 'bg-[#EFF1EC] border-[#8F987E] ring-2 ring-[#8F987E] text-[#2C2518]' : 'bg-[#FAF8F2] border-[#DCCFA6] text-[#756442]'}"
 						>
 							<div class="font-bold text-xs flex items-center gap-2">
-								<Icon name="zap" size={16} class={simVehicleType === 'mobil_listrik' ? 'text-emerald-400' : 'text-slate-400'} />
+								<Icon name="zap" size={16} class={simVehicleType === 'mobil_listrik' ? 'text-[#8F987E]' : 'text-[#756442]'} />
 								<span>Mobil EV</span>
 							</div>
-							<div class="text-[11px] font-mono text-emerald-400 font-semibold mt-1.5">Rp 75.000/hr</div>
+							<div class="text-[11px] font-mono text-[#8B774F] font-semibold mt-1.5">Rp 75.000/hr</div>
 						</button>
 					</div>
 				</div>
@@ -451,11 +451,11 @@
 				<!-- 2. Skema & Durasi Sewa -->
 				<div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
 					<div>
-						<label for="simRentalType" class="block text-xs font-bold text-slate-300 mb-2">2. Kategori Durasi</label>
+						<label for="simRentalType" class="block text-xs font-bold text-[#423825] mb-2">2. Kategori Durasi</label>
 						<select
 							id="simRentalType"
 							bind:value={simRentalType}
-							class="w-full px-4 py-3 text-xs border border-slate-700 rounded-xl input-focus bg-slate-900 text-white font-medium"
+							class="w-full px-4 py-3 text-xs border border-[#DCCFA6] rounded-xl input-focus bg-[#FAF8F2] text-[#2C2518] font-medium"
 						>
 							<option value="harian">Sewa Harian (Maks. 30 Hari)</option>
 							<option value="bulanan">Sewa Bulanan (Hemat 25x Tarif)</option>
@@ -463,7 +463,7 @@
 					</div>
 
 					<div>
-						<label for="simDuration" class="block text-xs font-bold text-slate-300 mb-2">
+						<label for="simDuration" class="block text-xs font-bold text-[#423825] mb-2">
 							Durasi ({simRentalType === 'harian' ? 'Hari' : 'Bulan'})
 						</label>
 						<input
@@ -472,20 +472,20 @@
 							bind:value={simDuration}
 							min="1"
 							max={simRentalType === 'harian' ? 30 : 12}
-							class="w-full px-4 py-3 text-xs border border-slate-700 rounded-xl input-focus bg-slate-900 text-white font-mono font-bold"
+							class="w-full px-4 py-3 text-xs border border-[#DCCFA6] rounded-xl input-focus bg-[#FAF8F2] text-[#2C2518] font-mono font-bold"
 						/>
 					</div>
 				</div>
 
 				<!-- 3. Jika Mobil Listrik: Input Baterai kWh -->
 				{#if simVehicleType === 'mobil_listrik'}
-					<div class="bg-emerald-950/30 border border-emerald-500/30 p-5 rounded-2xl space-y-3">
+					<div class="bg-[#EFF1EC] border border-[#C3C9B8] p-5 rounded-2xl space-y-3">
 						<div class="flex justify-between items-center text-xs">
-							<label for="simBatteryKwh" class="font-bold text-white flex items-center gap-2">
-								<Icon name="zap" size={15} class="text-emerald-400" />
+							<label for="simBatteryKwh" class="font-bold text-[#2C2518] flex items-center gap-2">
+								<Icon name="zap" size={15} class="text-[#8F987E]" />
 								<span>Kapasitas Baterai Listrik (kWh):</span>
 							</label>
-							<span class="font-mono font-bold text-emerald-400 bg-slate-900 px-3 py-1 rounded-xl border border-emerald-500/30 text-sm">
+							<span class="font-mono font-bold text-[#2C2518] bg-white px-3 py-1 rounded-xl border border-[#DFE3D9] text-sm">
 								{simBatteryKwh} kWh
 							</span>
 						</div>
@@ -496,9 +496,9 @@
 							min="15"
 							max="100"
 							step="1"
-							class="w-full accent-emerald-400 cursor-pointer"
+							class="w-full accent-[#8F987E] cursor-pointer"
 						/>
-						<p class="text-[11px] text-emerald-300/80">
+						<p class="text-[11px] text-[#4D5C4A]">
 							* Biaya pengisian penuh SPKLU 100%: {simBatteryKwh} kWh × Rp 2.500 = {formatRupiah(simBatteryKwh * 2500)}
 						</p>
 					</div>
@@ -506,34 +506,34 @@
 			</div>
 
 			<!-- Result Showcase Box -->
-			<div class="lg:col-span-5 bg-gradient-to-br from-[#0F172A] to-[#080D18] text-white p-8 rounded-3xl border border-white/15 shadow-2xl space-y-5">
-				<div class="flex items-center justify-between border-b border-slate-800 pb-4">
-					<span class="font-mono text-xs font-bold text-amber-400 uppercase tracking-wider">Hasil Estimasi Biaya</span>
-					<span class="text-[10px] font-mono px-2.5 py-1 rounded-full bg-emerald-500/15 text-emerald-400 border border-emerald-500/30 font-bold">
+			<div class="lg:col-span-5 bg-gradient-to-br from-[#2C2518] to-[#1B1710] text-[#EDE8D2] p-8 rounded-3xl border border-[#8B774F]/50 shadow-xl space-y-5">
+				<div class="flex items-center justify-between border-b border-[#423825] pb-4">
+					<span class="font-mono text-xs font-bold text-[#DCCFA6] uppercase tracking-wider">Hasil Estimasi Biaya</span>
+					<span class="text-[10px] font-mono px-2.5 py-1 rounded-full bg-[#8F987E]/30 text-[#EDE8D2] border border-[#8F987E]/50 font-bold">
 						Takalar Verified
 					</span>
 				</div>
 
 				<div class="space-y-3 text-xs font-mono">
-					<div class="flex justify-between text-slate-300">
+					<div class="flex justify-between text-[#DFE3D9]">
 						<span>Sewa Pokok Garasi:</span>
 						<span class="font-bold text-white">{formatRupiah(simResult.baseCost)}</span>
 					</div>
 					{#if simVehicleType === 'mobil_listrik'}
-						<div class="flex justify-between text-emerald-400">
+						<div class="flex justify-between text-[#DCCFA6]">
 							<span>Biaya Cas SPKLU ({simBatteryKwh} kWh):</span>
 							<span class="font-bold">{formatRupiah(simResult.electricityCost)}</span>
 						</div>
 					{/if}
-					<div class="flex justify-between text-slate-300">
+					<div class="flex justify-between text-[#DFE3D9]">
 						<span>Durasi Pilihan:</span>
 						<span class="font-bold text-white">{simDuration} {simRentalType === 'harian' ? 'Hari' : 'Bulan'}</span>
 					</div>
 				</div>
 
-				<div class="pt-5 border-t border-slate-800 space-y-1">
-					<span class="text-[10px] text-slate-400 uppercase tracking-wider block font-mono">Total Pembayaran Diperkirakan:</span>
-					<div class="text-3xl font-extrabold font-mono text-amber-400 tracking-tight">
+				<div class="pt-5 border-t border-[#423825] space-y-1">
+					<span class="text-[10px] text-[#A7AF99] uppercase tracking-wider block font-mono">Total Pembayaran Diperkirakan:</span>
+					<div class="text-3xl font-extrabold font-mono text-[#DCCFA6] tracking-tight">
 						{formatRupiah(simResult.totalCost)}
 					</div>
 				</div>
@@ -541,7 +541,7 @@
 				<div class="pt-2">
 					<a
 						href="/penyewa/sewa-baru"
-						class="w-full py-3.5 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-white font-bold rounded-xl text-xs text-center block transition shadow-[0_0_20px_rgba(16,185,129,0.3)] btn-interactive"
+						class="w-full py-3.5 bg-[#8F987E] hover:bg-[#778267] text-white font-bold rounded-xl text-xs text-center block transition shadow-md btn-interactive"
 					>
 						Lanjutkan Sewa dengan Biaya Ini →
 					</a>
@@ -553,54 +553,54 @@
 	<!-- ================= 4. KEUNGGULAN EKSKLUSIF GARTA TAKALAR ================= -->
 	<section class="space-y-6">
 		<div class="text-center max-w-xl mx-auto">
-			<span class="text-xs font-bold text-emerald-400 uppercase tracking-wider block mb-1">Standar Kualitas & Kenyamanan</span>
-			<h2 class="text-2xl sm:text-3xl font-extrabold text-white">Mengapa Memilih GARTA Takalar?</h2>
-			<p class="text-xs sm:text-sm text-slate-400 mt-1">
+			<span class="text-xs font-bold text-[#8B774F] uppercase tracking-wider block mb-1">Standar Kualitas & Kenyamanan</span>
+			<h2 class="text-2xl sm:text-3xl font-extrabold text-[#2C2518]">Mengapa Memilih GARTA Takalar?</h2>
+			<p class="text-xs sm:text-sm text-[#5C4F35] mt-1">
 				Fasilitas penitipan terpadu yang dirancang untuk menjaga kondisi kendaraan Anda tetap prima dan aman selama Anda beraktivitas.
 			</p>
 		</div>
 
 		<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
 			<!-- Feature 1 -->
-			<div class="glass-panel p-6 rounded-3xl space-y-3.5 card-hover">
-				<div class="w-11 h-11 rounded-2xl bg-cyan-500/10 text-cyan-400 border border-cyan-500/20 flex items-center justify-center font-bold">
+			<div class="bg-white p-6 rounded-3xl border border-[#DCCFA6] shadow-xs space-y-3.5 card-hover">
+				<div class="w-11 h-11 rounded-2xl bg-[#EFF1EC] text-[#8F987E] border border-[#DFE3D9] flex items-center justify-center font-bold">
 					<Icon name="shield" size={22} />
 				</div>
-				<h3 class="font-bold text-sm text-white">Proteksi CCTV 24/7 & Satpam</h3>
-				<p class="text-xs text-slate-400 leading-relaxed">
+				<h3 class="font-bold text-sm text-[#2C2518]">Proteksi CCTV 24/7 & Satpam</h3>
+				<p class="text-xs text-[#5C4F35] leading-relaxed">
 					Didukung sistem kamera pengawas terpusat dan petugas jaga satpam Takalar 2 lapis untuk keamanan maksimal siang dan malam.
 				</p>
 			</div>
 
 			<!-- Feature 2 -->
-			<div class="glass-panel p-6 rounded-3xl space-y-3.5 card-hover">
-				<div class="w-11 h-11 rounded-2xl bg-amber-500/10 text-amber-400 border border-amber-500/20 flex items-center justify-center font-bold">
+			<div class="bg-white p-6 rounded-3xl border border-[#DCCFA6] shadow-xs space-y-3.5 card-hover">
+				<div class="w-11 h-11 rounded-2xl bg-[#F7F4EC] text-[#8B774F] border border-[#DDD3BC] flex items-center justify-center font-bold">
 					<Icon name="building" size={22} />
 				</div>
-				<h3 class="font-bold text-sm text-white">Kanopi Indoor Anti Panas</h3>
-				<p class="text-xs text-slate-400 leading-relaxed">
+				<h3 class="font-bold text-sm text-[#2C2518]">Kanopi Indoor Anti Panas</h3>
+				<p class="text-xs text-[#5C4F35] leading-relaxed">
 					Seluruh slot dilindungi atap baja ringan berinsulasi panas untuk melindungi cat mobil dan motor dari terik matahari dan hujan lebat.
 				</p>
 			</div>
 
 			<!-- Feature 3 -->
-			<div class="glass-panel p-6 rounded-3xl space-y-3.5 card-hover">
-				<div class="w-11 h-11 rounded-2xl bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 flex items-center justify-center font-bold">
+			<div class="bg-white p-6 rounded-3xl border border-[#DCCFA6] shadow-xs space-y-3.5 card-hover">
+				<div class="w-11 h-11 rounded-2xl bg-[#EFF1EC] text-[#8F987E] border border-[#DFE3D9] flex items-center justify-center font-bold">
 					<Icon name="zap" size={22} />
 				</div>
-				<h3 class="font-bold text-sm text-white">SPKLU Wallbox 22 kW EV</h3>
-				<p class="text-xs text-slate-400 leading-relaxed">
+				<h3 class="font-bold text-sm text-[#2C2518]">SPKLU Wallbox 22 kW EV</h3>
+				<p class="text-xs text-[#5C4F35] leading-relaxed">
 					Stasiun pengisian daya kendaraan listrik terstandar dengan pencatatan meteran kWh transparan dan cut-off proteksi arus lebih.
 				</p>
 			</div>
 
 			<!-- Feature 4 -->
-			<div class="glass-panel p-6 rounded-3xl space-y-3.5 card-hover">
-				<div class="w-11 h-11 rounded-2xl bg-teal-500/10 text-teal-400 border border-teal-500/20 flex items-center justify-center font-bold">
+			<div class="bg-white p-6 rounded-3xl border border-[#DCCFA6] shadow-xs space-y-3.5 card-hover">
+				<div class="w-11 h-11 rounded-2xl bg-[#FAF8F2] text-[#8B774F] border border-[#DCCFA6] flex items-center justify-center font-bold">
 					<Icon name="check" size={22} />
 				</div>
-				<h3 class="font-bold text-sm text-white">Lokasi Strategis Takalar</h3>
-				<p class="text-xs text-slate-400 leading-relaxed">
+				<h3 class="font-bold text-sm text-[#2C2518]">Lokasi Strategis Takalar</h3>
+				<p class="text-xs text-[#5C4F35] leading-relaxed">
 					Berada di kawasan pusat Pattallassang Kabupaten Takalar, dekat dengan jalan poros utama yang mudah dijangkau kapan pun.
 				</p>
 			</div>
@@ -608,30 +608,30 @@
 	</section>
 
 	<!-- ================= 5. CALL TO ACTION BANNER MEWAH ================= -->
-	<section class="rounded-3xl bg-gradient-to-r from-slate-900 via-[#0B1527] to-slate-900 border border-white/10 text-white p-8 sm:p-14 text-center shadow-2xl relative overflow-hidden">
-		<div class="absolute -top-20 -left-20 w-72 h-72 rounded-full bg-emerald-500/15 blur-3xl pointer-events-none"></div>
-		<div class="absolute -bottom-20 -right-20 w-72 h-72 rounded-full bg-cyan-500/15 blur-3xl pointer-events-none"></div>
+	<section class="rounded-3xl bg-gradient-to-r from-[#2C2518] via-[#353F32] to-[#2C2518] border border-[#8B774F]/50 text-white p-8 sm:p-14 text-center shadow-xl relative overflow-hidden">
+		<div class="absolute -top-20 -left-20 w-72 h-72 rounded-full bg-[#8B774F]/20 blur-3xl pointer-events-none"></div>
+		<div class="absolute -bottom-20 -right-20 w-72 h-72 rounded-full bg-[#DCCFA6]/20 blur-3xl pointer-events-none"></div>
 
 		<div class="relative z-10 max-w-2xl mx-auto space-y-4">
-			<span class="px-4 py-1 rounded-full bg-amber-500/10 text-amber-400 text-xs font-mono font-bold border border-amber-500/30 inline-block">
+			<span class="px-4 py-1 rounded-full bg-[#DCCFA6]/20 text-[#DCCFA6] text-xs font-mono font-bold border border-[#DCCFA6]/40 inline-block">
 				Pendaftaran Online Cepat & Praktis
 			</span>
 			<h2 class="text-2xl sm:text-4xl font-extrabold text-white">
 				Titipkan Kendaraan Anda di GARTA Takalar Hari Ini
 			</h2>
-			<p class="text-xs sm:text-sm text-slate-300 leading-relaxed">
+			<p class="text-xs sm:text-sm text-[#DFE3D9] leading-relaxed">
 				Daftarkan akun Anda dalam 1 menit, pilih slot garasi yang diinginkan, dan nikmati ketenangan penitipan bergaransi resmi.
 			</p>
 			<div class="pt-5 flex flex-wrap items-center justify-center gap-3.5">
 				<a
 					href="/auth/register"
-					class="px-7 py-3.5 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-white font-bold rounded-xl text-xs sm:text-sm transition-all shadow-[0_0_20px_rgba(16,185,129,0.3)] btn-interactive"
+					class="px-7 py-3.5 bg-[#8F987E] hover:bg-[#778267] text-white font-bold rounded-xl text-xs sm:text-sm transition-all shadow-md btn-interactive"
 				>
 					Daftar Akun Penyewa Baru
 				</a>
 				<a
 					href="/auth/login"
-					class="px-7 py-3.5 bg-slate-900 hover:bg-slate-800 text-slate-200 font-semibold rounded-xl text-xs sm:text-sm transition-all border border-slate-700 shadow-sm btn-interactive"
+					class="px-7 py-3.5 bg-[#353F32] hover:bg-[#424F3F] text-[#EDE8D2] font-semibold rounded-xl text-xs sm:text-sm transition-all border border-[#8F987E]/50 shadow-sm btn-interactive"
 				>
 					Sudah Punya Akun? Masuk
 				</a>

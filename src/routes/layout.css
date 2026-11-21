@@ -1,62 +1,96 @@
 @import 'tailwindcss';
 
 @theme {
-	/* Dribbble Cyber Automotive Palette (GARTA Smart Safe Garage & EV Hub) */
-	--color-obsidian-950: #07090E;
-	--color-obsidian-900: #0B0F17;
-	--color-obsidian-850: #0F1420;
-	--color-obsidian-800: #141B2B;
-	--color-obsidian-750: #1A2338;
-	--color-obsidian-700: #222D45;
+	/* Palette Resmi dari User:
+	   Band 1: #8B774F (Warm Olive Bronze / Golden Earth)
+	   Band 2: #8F987E (Muted Sage Green / Eucalyptus)
+	   Band 3: #EDE8D2 (Warm Cream Linen / Pearl Ivory)
+	   Band 4: #DCCFA6 (Champagne Sand Khaki)
+	*/
+	--color-bronze-950: #1B1710;
+	--color-bronze-900: #2C2518;
+	--color-bronze-800: #423825;
+	--color-bronze-700: #5C4F35;
+	--color-bronze-600: #756442;
+	--color-bronze-500: #8B774F; /* EXACT BAND 1 */
+	--color-bronze-400: #A8956E;
+	--color-bronze-300: #C2B392;
+	--color-bronze-200: #DDD3BC;
+	--color-bronze-100: #EDE5D5;
+	--color-bronze-50: #F7F4EC;
 
-	/* Electric Emerald / Mint (Status Tersedia & Eco EV) */
-	--color-neon-emerald: #10B981;
-	--color-neon-mint: #34D399;
-	--color-neon-cyan: #06B6D4;
+	--color-sage-950: #161A14;
+	--color-sage-900: #222920;
+	--color-sage-800: #353F32;
+	--color-sage-700: #4D5C4A;
+	--color-sage-600: #6B7D67;
+	--color-sage-500: #8F987E; /* EXACT BAND 2 */
+	--color-sage-400: #A7AF99;
+	--color-sage-300: #C3C9B8;
+	--color-sage-200: #DFE3D9;
+	--color-sage-100: #EFF1EC;
+	--color-sage-50: #F7F9F6;
 
-	/* Cyber Amber / Electric Gold (Branding GARTA Takalar) */
-	--color-cyber-gold: #F59E0B;
-	--color-cyber-amber: #FBBF24;
-	--color-cyber-yellow: #FDE047;
+	--color-cream-900: #423F34;
+	--color-cream-800: #635E4E;
+	--color-cream-700: #857F69;
+	--color-cream-600: #A7A086;
+	--color-cream-500: #C8C1A5;
+	--color-cream-400: #EDE8D2; /* EXACT BAND 3 */
+	--color-cream-300: #F3EFE0;
+	--color-cream-200: #F7F4EB;
+	--color-cream-100: #FAF8F2;
+	--color-cream-50: #FDFCF9;
+
+	--color-sand-900: #3D3728;
+	--color-sand-800: #5C523C;
+	--color-sand-700: #7D7052;
+	--color-sand-600: #A1916B;
+	--color-sand-500: #DCCFA6; /* EXACT BAND 4 */
+	--color-sand-400: #E5DBBD;
+	--color-sand-300: #EDE6D2;
+	--color-sand-200: #F4F0E4;
+	--color-sand-100: #F9F7F1;
+	--color-sand-50: #FCFBF8;
 }
 
 /* Custom interactive animations and micro-effects */
 html {
 	scroll-behavior: smooth;
-	accent-color: #10B981;
+	accent-color: #8F987E;
 }
 
 body {
-	background-color: #080C14;
-	color: #F1F5F9;
+	background-color: #F8F6F0;
+	color: #2C2518;
 	font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
 	background-image: 
-		radial-gradient(circle at 50% 0%, rgba(16, 185, 129, 0.08) 0%, transparent 50%),
-		radial-gradient(circle at 85% 30%, rgba(245, 158, 11, 0.05) 0%, transparent 40%),
-		radial-gradient(circle at 15% 70%, rgba(6, 182, 212, 0.05) 0%, transparent 40%);
+		radial-gradient(circle at 50% 0%, rgba(220, 207, 166, 0.35) 0%, transparent 60%),
+		radial-gradient(circle at 90% 20%, rgba(143, 152, 126, 0.2) 0%, transparent 40%),
+		radial-gradient(circle at 10% 80%, rgba(139, 119, 79, 0.15) 0%, transparent 50%);
 	background-attachment: fixed;
 }
 
 ::selection {
-	background-color: rgba(16, 185, 129, 0.3);
-	color: #FFFFFF;
+	background-color: #DCCFA6;
+	color: #2C2518;
 }
 
-/* Glassmorphism Classes */
-.glass-panel {
-	background: rgba(15, 20, 32, 0.75);
+/* Luxury Scandinavian Glass Panels */
+.glass-panel-luxury {
+	background: rgba(255, 255, 255, 0.88);
 	backdrop-filter: blur(16px);
 	-webkit-backdrop-filter: blur(16px);
-	border: 1px solid rgba(255, 255, 255, 0.08);
-	box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+	border: 1px solid rgba(220, 207, 166, 0.6);
+	box-shadow: 0 10px 30px -5px rgba(44, 37, 24, 0.05), 0 4px 10px -2px rgba(44, 37, 24, 0.03);
 }
 
-.glass-panel-elevated {
-	background: rgba(20, 27, 43, 0.85);
+.glass-panel-dark {
+	background: rgba(34, 41, 32, 0.92);
 	backdrop-filter: blur(20px);
 	-webkit-backdrop-filter: blur(20px);
-	border: 1px solid rgba(255, 255, 255, 0.12);
-	box-shadow: 0 12px 40px -4px rgba(0, 0, 0, 0.5), inset 0 1px 0 0 rgba(255, 255, 255, 0.1);
+	border: 1px solid rgba(220, 207, 166, 0.25);
+	box-shadow: 0 20px 40px -10px rgba(22, 26, 20, 0.6);
 }
 
 /* Keyframe Animations */
@@ -65,42 +99,18 @@ body {
 		transform: translateY(0px) rotate(0deg);
 	}
 	50% {
-		transform: translateY(-6px) rotate(0.5deg);
+		transform: translateY(-5px) rotate(0.5deg);
 	}
 }
 
-@keyframes pulse-glow {
+@keyframes pulse-warm {
 	0%, 100% {
-		opacity: 0.4;
-		filter: drop-shadow(0 0 15px rgba(16, 185, 129, 0.4));
+		opacity: 0.5;
+		filter: drop-shadow(0 0 10px rgba(220, 207, 166, 0.5));
 	}
 	50% {
-		opacity: 0.8;
-		filter: drop-shadow(0 0 25px rgba(16, 185, 129, 0.8));
-	}
-}
-
-@keyframes radar-pulse {
-	0% {
-		transform: scale(0.95);
-		box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7);
-	}
-	70% {
-		transform: scale(1);
-		box-shadow: 0 0 0 10px rgba(16, 185, 129, 0);
-	}
-	100% {
-		transform: scale(0.95);
-		box-shadow: 0 0 0 0 rgba(16, 185, 129, 0);
-	}
-}
-
-@keyframes shimmer {
-	0% {
-		background-position: -200% 0;
-	}
-	100% {
-		background-position: 200% 0;
+		opacity: 0.9;
+		filter: drop-shadow(0 0 20px rgba(220, 207, 166, 0.9));
 	}
 }
 
@@ -108,21 +118,8 @@ body {
 	animation: float-slow 4s ease-in-out infinite;
 }
 
-.animate-radar {
-	animation: radar-pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
-}
-
-.animate-pulse-glow {
-	animation: pulse-glow 3s ease-in-out infinite;
-}
-
-.text-shimmer {
-	background: linear-gradient(90deg, #FFFFFF 0%, #F59E0B 50%, #FFFFFF 100%);
-	background-size: 200% auto;
-	color: transparent;
-	-webkit-background-clip: text;
-	background-clip: text;
-	animation: shimmer 4s linear infinite;
+.animate-pulse-warm {
+	animation: pulse-warm 3s ease-in-out infinite;
 }
 
 /* Subtle focus ring style */
@@ -131,8 +128,8 @@ body {
 }
 .input-focus:focus {
 	outline: none;
-	border-color: #10B981;
-	box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.25);
+	border-color: #8B774F;
+	box-shadow: 0 0 0 3px rgba(139, 119, 79, 0.25);
 }
 
 /* Interactive card hover */
@@ -140,9 +137,9 @@ body {
 	transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
 }
 .card-hover:hover {
-	transform: translateY(-4px);
-	box-shadow: 0 16px 32px -8px rgba(0, 0, 0, 0.6), 0 0 20px 2px rgba(16, 185, 129, 0.15);
-	border-color: rgba(16, 185, 129, 0.4);
+	transform: translateY(-3px);
+	box-shadow: 0 16px 32px -8px rgba(44, 37, 24, 0.1), 0 0 0 1px rgba(143, 152, 126, 0.4);
+	border-color: #8F987E;
 }
 
 /* Interactive button press effect */
