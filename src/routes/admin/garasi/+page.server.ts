@@ -254,10 +254,10 @@ export const actions: Actions = {
 			return fail(404, { error: 'Unit garasi tidak ditemukan' });
 		}
 
-		// Cek apakah garasi sedang aktif dirental
-		const activeRental = db.prepare("SELECT COUNT(*) as count FROM rentals WHERE garage_id = ? AND status = 'active'").get(id) as { count: number };
+		// Cek apakah garasi sedang aktif dirental atau menunggu ACC
+		const activeRental = db.prepare("SELECT COUNT(*) as count FROM rentals WHERE garage_id = ? AND status IN ('pending', 'active')").get(id) as { count: number };
 		if (activeRental.count > 0) {
-			return fail(400, { error: `Unit ${garage.code} tidak dapat dihapus karena masih sedang aktif dirental oleh penyewa.` });
+			return fail(400, { error: `Unit ${garage.code} tidak dapat dihapus karena masih memiliki kontrak sewa aktif atau pengajuan sewa yang sedang diproses.` });
 		}
 
 		db.prepare('DELETE FROM rentals WHERE garage_id = ?').run(id);

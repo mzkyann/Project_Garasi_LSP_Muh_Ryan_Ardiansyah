@@ -47,7 +47,7 @@ export const load: PageServerLoad = async ({ locals, url }) => {
 			FROM rentals r
 			JOIN garages g ON r.garage_id = g.id
 			JOIN users u ON r.user_id = u.id
-			WHERE r.start_date LIKE ?
+			WHERE r.start_date LIKE ? AND r.status IN ('active', 'completed')
 			ORDER BY r.start_date DESC
 		`).all(`${monthPrefix}%`) as any[];
 	} else if (mode === 'hari') {
@@ -62,7 +62,7 @@ export const load: PageServerLoad = async ({ locals, url }) => {
 			FROM rentals r
 			JOIN garages g ON r.garage_id = g.id
 			JOIN users u ON r.user_id = u.id
-			WHERE r.start_date = ?
+			WHERE r.start_date = ? AND r.status IN ('active', 'completed')
 			ORDER BY r.id DESC
 		`).all(selectedDate) as any[];
 	} else if (mode === 'tipe') {
@@ -77,11 +77,12 @@ export const load: PageServerLoad = async ({ locals, url }) => {
 			FROM rentals r
 			JOIN garages g ON r.garage_id = g.id
 			JOIN users u ON r.user_id = u.id
+			WHERE r.status IN ('active', 'completed')
 		`;
 		const params: any[] = [];
 
 		if (selectedType !== 'all') {
-			query += ' WHERE g.type = ?';
+			query += ' AND g.type = ?';
 			params.push(selectedType);
 		}
 		query += ' ORDER BY g.type, r.id DESC';
@@ -99,11 +100,12 @@ export const load: PageServerLoad = async ({ locals, url }) => {
 			FROM rentals r
 			JOIN garages g ON r.garage_id = g.id
 			JOIN users u ON r.user_id = u.id
+			WHERE r.status IN ('active', 'completed')
 		`;
 		const params: any[] = [];
 
 		if (selectedTenant !== 'all') {
-			query += ' WHERE r.user_id = ?';
+			query += ' AND r.user_id = ?';
 			params.push(parseInt(selectedTenant, 10));
 		}
 		query += ' ORDER BY u.name, r.id DESC';

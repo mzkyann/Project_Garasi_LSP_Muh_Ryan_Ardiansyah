@@ -10,40 +10,7 @@
 	<title>Masuk Sistem - SIM-GARASI</title>
 </svelte:head>
 
-<div class="max-w-md mx-auto my-6 space-y-5">
-	<!-- Demo Testing Card for LSP Assessor -->
-	<div class="bg-white border border-[#DFD5C2] rounded-xl p-5 shadow-xs card-hover">
-		<div class="flex items-center gap-2 text-xs font-bold text-[#71856A] mb-1">
-			<Icon name="shield" size={15} />
-			<span>Akses Cepat Pengujian Asesor / Reviewer</span>
-		</div>
-		<p class="text-[11px] text-[#6B5E45] mb-3 leading-relaxed">
-			Klik salah satu akun di bawah untuk masuk otomatis tanpa mengisi kredensial manual:
-		</p>
-		<div class="grid grid-cols-2 gap-2.5">
-			<form method="POST" action="?/quickLogin">
-				<input type="hidden" name="targetRole" value="admin" />
-				<button
-					type="submit"
-					class="w-full py-2 px-3 bg-[#383123] hover:bg-[#252016] text-[#FAF8F4] rounded-lg text-xs font-bold transition-all shadow-xs flex items-center justify-center gap-1.5 btn-interactive"
-				>
-					<Icon name="user" size={13} class="text-[#DAC99B]" />
-					<span>Admin (Citra)</span>
-				</button>
-			</form>
-			<form method="POST" action="?/quickLogin">
-				<input type="hidden" name="targetRole" value="penyewa" />
-				<button
-					type="submit"
-					class="w-full py-2 px-3 bg-[#EFF3ED] hover:bg-[#DFE5DC] text-[#2E382A] border border-[#C2CCBC] rounded-lg text-xs font-bold transition-all shadow-xs flex items-center justify-center gap-1.5 btn-interactive"
-				>
-					<Icon name="user" size={13} class="text-[#71856A]" />
-					<span>Penyewa (Budi)</span>
-				</button>
-			</form>
-		</div>
-	</div>
-
+<div class="max-w-md mx-auto my-8 space-y-5">
 	<!-- Main Login Card -->
 	<div class="bg-white rounded-xl shadow-xs border border-[#DFD5C2] overflow-hidden card-hover">
 		<div class="p-6 border-b border-[#F4EFE7] bg-[#FAF8F4]">

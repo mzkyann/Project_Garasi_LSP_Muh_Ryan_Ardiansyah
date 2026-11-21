@@ -67,7 +67,7 @@ CREATE TABLE IF NOT EXISTS rentals (
     electricity_cost REAL DEFAULT 0 CHECK(electricity_cost >= 0),
     total_cost REAL NOT NULL CHECK(total_cost >= 0),
     payment_proof TEXT,
-    status TEXT NOT NULL DEFAULT 'active' CHECK(status IN ('active', 'completed', 'cancelled')),
+    status TEXT NOT NULL DEFAULT 'pending' CHECK(status IN ('pending', 'active', 'completed', 'cancelled', 'rejected')),
     created_at TEXT NOT NULL
 );
 
@@ -87,6 +87,7 @@ CREATE TABLE IF NOT EXISTS rental_extensions (
     additional_days INTEGER NOT NULL CHECK(additional_days > 0),
     additional_cost REAL NOT NULL CHECK(additional_cost >= 0),
     payment_proof TEXT NOT NULL,
+    status TEXT NOT NULL DEFAULT 'pending' CHECK(status IN ('pending', 'approved', 'rejected')),
     created_at TEXT NOT NULL
 );
 

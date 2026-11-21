@@ -51,16 +51,26 @@
 								Kelola Garasi
 							</a>
 							<a
-								href="/admin/verifikasi"
-								class="px-3 py-1.5 rounded-md text-[#D8CEB9] hover:text-white hover:bg-[#4F4532] transition-colors"
+								href="/admin/persetujuan"
+								class="px-3 py-1.5 rounded-md text-[#D8CEB9] hover:text-white hover:bg-[#4F4532] transition-colors relative flex items-center gap-1.5"
 							>
-								Verifikasi Pendaftar
+								<span>Persetujuan Sewa (ACC)</span>
+								{#if data.pendingApprovals > 0}
+									<span class="px-1.5 py-0.2 bg-amber-500 text-black text-[10px] font-mono font-extrabold rounded-full animate-pulse">
+										{data.pendingApprovals}
+									</span>
+								{/if}
 							</a>
 							<a
-								href="/admin/perpanjang"
-								class="px-3 py-1.5 rounded-md text-[#D8CEB9] hover:text-white hover:bg-[#4F4532] transition-colors"
+								href="/admin/verifikasi"
+								class="px-3 py-1.5 rounded-md text-[#D8CEB9] hover:text-white hover:bg-[#4F4532] transition-colors relative flex items-center gap-1.5"
 							>
-								Perpanjang Sewa
+								<span>Verifikasi KTP</span>
+								{#if data.pendingUsers > 0}
+									<span class="px-1.5 py-0.2 bg-amber-500 text-black text-[10px] font-mono font-extrabold rounded-full">
+										{data.pendingUsers}
+									</span>
+								{/if}
 							</a>
 							<a
 								href="/admin/laporan"
@@ -84,24 +94,24 @@
 							</a>
 						{/if}
 
-						<!-- User Profile Info & Logout -->
-						<div class="flex items-center gap-2.5 pl-3 ml-2 border-l border-[#4F4532]">
-							<div class="hidden md:block text-right">
-								<div class="text-xs font-semibold text-white leading-none">{user.name}</div>
-								<div class="text-[10px] text-[#DAC99B] uppercase font-mono mt-0.5">
-									{user.role} {#if user.status !== 'approved'}<span class="text-amber-300">({user.status})</span>{/if}
+						<!-- User Profile Link (Ke Halaman Profile Terlebih Dahulu Sebelum Logout) -->
+						<div class="flex items-center pl-3 ml-2 border-l border-[#4F4532]">
+							<a
+								href="/profile"
+								class="flex items-center gap-2.5 px-3 py-1.5 rounded-lg bg-[#4F4532] hover:bg-[#5A4F3A] text-[#FAF8F4] border border-[#6B5E45] transition-all btn-interactive group"
+								title="Buka Halaman Profil & Pengaturan Akun"
+							>
+								<div class="w-6 h-6 rounded-md bg-[#71856A] text-white flex items-center justify-center font-bold text-[11px] font-mono group-hover:scale-105 transition-transform">
+									{user.name.charAt(0).toUpperCase()}
 								</div>
-							</div>
-							<form action="/auth/logout" method="POST" class="inline">
-								<button
-									type="submit"
-									class="text-xs bg-[#4F4532] hover:bg-rose-900/80 hover:text-white text-[#EAE3D4] px-2.5 py-1.5 rounded-md border border-[#6B5E45] transition flex items-center gap-1 btn-interactive"
-									title="Keluar dari sistem"
-								>
-									<Icon name="logout" size={13} />
-									<span class="hidden sm:inline">Keluar</span>
-								</button>
-							</form>
+								<div class="text-left hidden sm:block">
+									<div class="text-xs font-semibold leading-none">{user.name}</div>
+									<div class="text-[9px] text-[#DAC99B] uppercase font-mono mt-0.5">
+										{user.role}
+									</div>
+								</div>
+								<span class="text-[10px] text-[#DAC99B] font-medium hidden md:inline">Profil →</span>
+							</a>
 						</div>
 					{:else}
 						<a

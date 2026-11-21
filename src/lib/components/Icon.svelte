@@ -20,6 +20,7 @@
 		| 'chevron-right'
 		| 'arrow-right'
 		| 'filter'
+		| 'search'
 		| 'upload';
 
 	let {
@@ -118,6 +119,9 @@
 		<path d="m12 5 7 7-7 7" />
 	{:else if name === 'filter'}
 		<polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3" />
+	{:else if name === 'search'}
+		<circle cx="11" cy="11" r="8" />
+		<path d="m21 21-4.3-4.3" />
 	{:else if name === 'upload'}
 		<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
 		<polyline points="17 8 12 3 7 8" />

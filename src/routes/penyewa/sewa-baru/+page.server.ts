@@ -44,18 +44,18 @@ export const load: PageServerLoad = async ({ locals }) => {
 			g.*,
 			(
 				SELECT r.start_date FROM rentals r 
-				WHERE r.garage_id = g.id AND r.status = 'active' AND r.end_date >= ?
+				WHERE r.garage_id = g.id AND r.status IN ('pending', 'active') AND r.end_date >= ?
 				ORDER BY r.end_date DESC LIMIT 1
 			) as active_start_date,
 			(
 				SELECT r.end_date FROM rentals r 
-				WHERE r.garage_id = g.id AND r.status = 'active' AND r.end_date >= ?
+				WHERE r.garage_id = g.id AND r.status IN ('pending', 'active') AND r.end_date >= ?
 				ORDER BY r.end_date DESC LIMIT 1
 			) as active_end_date,
 			(
 				SELECT u.name FROM rentals r 
 				JOIN users u ON r.user_id = u.id
-				WHERE r.garage_id = g.id AND r.status = 'active' AND r.end_date >= ?
+				WHERE r.garage_id = g.id AND r.status IN ('pending', 'active') AND r.end_date >= ?
 				ORDER BY r.end_date DESC LIMIT 1
 			) as active_tenant_name
 		FROM garages g
@@ -64,10 +64,10 @@ export const load: PageServerLoad = async ({ locals }) => {
 
 	// Ambil semua sewa aktif untuk kalender ketersediaan armada
 	const allActiveRentals = db.prepare(`
-		SELECT r.garage_id, r.start_date, r.end_date, u.name as tenant_name
+		SELECT r.garage_id, r.start_date, r.end_date, r.status, u.name as tenant_name
 		FROM rentals r
 		JOIN users u ON r.user_id = u.id
-		WHERE r.status = 'active' AND r.end_date >= ?
+		WHERE r.status IN ('pending', 'active') AND r.end_date >= ?
 		ORDER BY r.start_date ASC
 	`).all(today) as any[];
 
@@ -126,10 +126,10 @@ export const actions: Actions = {
 			return fail(400, { error: err.message });
 		}
 
-		// Validasi overlap jadwal sewa aktif: Apakah ada sewa aktif yang bertabrakan dengan rentang [startDate, expectedEndDate]?
+		// Validasi overlap jadwal sewa aktif/pending: Apakah ada sewa yang bertabrakan dengan rentang [startDate, expectedEndDate]?
 		const overlappingRental = db.prepare(`
 			SELECT id, start_date, end_date FROM rentals 
-			WHERE garage_id = ? AND status = 'active'
+			WHERE garage_id = ? AND status IN ('pending', 'active')
 			  AND NOT (end_date < ? OR start_date > ?)
 			ORDER BY end_date DESC
 			LIMIT 1
@@ -141,7 +141,7 @@ export const actions: Actions = {
 			const readyDate = endObj.toISOString().split('T')[0];
 
 			return fail(400, {
-				error: `Unit ${rawGarage.code} (${rawGarage.vehicle_name}) sedang dirental pada periode tersebut (${overlappingRental.start_date} s/d ${overlappingRental.end_date}). Unit ini siap disewa kembali mulai tanggal ${readyDate}.`
+				error: `Unit ${rawGarage.code} (${rawGarage.vehicle_name}) sedang dalam proses sewa pada periode tersebut (${overlappingRental.start_date} s/d ${overlappingRental.end_date}). Unit ini siap disewa kembali mulai tanggal ${readyDate}.`
 			});
 		}
 
@@ -209,20 +209,16 @@ export const actions: Actions = {
 
 		const now = new Date().toISOString();
 
-		// Simpan sewa ke database dan ubah status garasi menjadi 'used' (tersewa)
+		// Simpan sewa ke database dengan status 'pending' (menunggu ACC persetujuan Admin)
 		const insertRental = db.prepare(`
 			INSERT INTO rentals (
 				user_id, garage_id, vehicle_type, license_plate, vehicle_brand_model,
 				battery_capacity_kwh, rental_type, duration, start_date, end_date,
 				base_rental_cost, electricity_cost, total_cost, payment_proof, status, created_at
-			) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'active', ?)
+			) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending', ?)
 		`);
 
-		const updateGarage = db.prepare(`
-			UPDATE garages SET status = 'used' WHERE id = ?
-		`);
-
-		// Eksekusi insert sewa dan update status garasi menjadi 'used'
+		// Eksekusi insert sewa baru
 		insertRental.run(
 			locals.user.id,
 			garageObj.id,
@@ -241,10 +237,6 @@ export const actions: Actions = {
 			now
 		);
 
-		if (startDate === today) {
-			updateGarage.run(garageObj.id);
-		}
-
-		throw redirect(303, '/penyewa/riwayat?success=1');
+		throw redirect(303, '/penyewa/riwayat?submitted=1');
 	}
 };
