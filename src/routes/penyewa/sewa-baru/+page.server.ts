@@ -74,10 +74,14 @@ export const load: PageServerLoad = async ({ locals }) => {
 	// Hitung kapan masing-masing kendaraan ready kembali
 	for (const g of garages) {
 		g.active_rentals = allActiveRentals.filter((r) => r.garage_id === g.id);
-		if (g.active_end_date && g.active_end_date >= today) {
-			const endObj = new Date(g.active_end_date);
-			endObj.setDate(endObj.getDate() + 1);
-			g.next_available_date = endObj.toISOString().split('T')[0];
+		const upcomingRentals = g.active_rentals.filter((r: any) => r.end_date > today);
+		if (upcomingRentals.length > 0) {
+			// Kendaraan yang disewa ready kembali tepat pada tanggal selesai sewa (tanggal pengembalian)
+			const latestEnd = upcomingRentals.reduce(
+				(max: string, r: any) => (r.end_date > max ? r.end_date : max),
+				upcomingRentals[0].end_date
+			);
+			g.next_available_date = latestEnd;
 		} else {
 			g.next_available_date = today;
 		}
@@ -130,18 +134,16 @@ export const actions: Actions = {
 		const overlappingRental = db.prepare(`
 			SELECT id, start_date, end_date FROM rentals 
 			WHERE garage_id = ? AND status IN ('pending', 'active')
-			  AND NOT (end_date < ? OR start_date > ?)
+			  AND NOT (end_date <= ? OR start_date >= ?)
 			ORDER BY end_date DESC
 			LIMIT 1
 		`).get(garageId, startDate, expectedEndDate) as any;
 
 		if (overlappingRental) {
-			const endObj = new Date(overlappingRental.end_date);
-			endObj.setDate(endObj.getDate() + 1);
-			const readyDate = endObj.toISOString().split('T')[0];
+			const readyDate = overlappingRental.end_date;
 
 			return fail(400, {
-				error: `Unit ${rawGarage.code} (${rawGarage.vehicle_name}) sedang dalam proses sewa pada periode tersebut (${overlappingRental.start_date} s/d ${overlappingRental.end_date}). Unit ini siap disewa kembali mulai tanggal ${readyDate}.`
+				error: `Unit ${rawGarage.code} (${rawGarage.vehicle_name}) sedang dalam masa sewa pada periode tersebut (${overlappingRental.start_date} s/d ${overlappingRental.end_date}). Unit ini siap disewa kembali mulai tanggal ${readyDate}.`
 			});
 		}
 

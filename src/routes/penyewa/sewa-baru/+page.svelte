@@ -89,10 +89,10 @@
 	function isGarageBookedOnSelectedRange(garage: any, start: string, end: string): boolean {
 		if (!start || !end) return false;
 		if (garage.active_rentals && garage.active_rentals.length > 0) {
-			return garage.active_rentals.some((r: any) => !(r.end_date < start || r.start_date > end));
+			return garage.active_rentals.some((r: any) => !(r.end_date <= start || r.start_date >= end));
 		}
 		if (garage.active_start_date && garage.active_end_date) {
-			return !(garage.active_end_date < start || garage.active_start_date > end);
+			return !(garage.active_end_date <= start || garage.active_start_date >= end);
 		}
 		if (start === data.today && garage.status === 'used') {
 			return true;
@@ -770,7 +770,8 @@
 					<div class="grid grid-cols-7 gap-1.5 text-center">
 						{#each Array.from({ length: 7 }) as _, i}
 							{@const dayDate = getOffsetDate(i)}
-							{@const isDayBooked = isGarageBookedOnSelectedRange(scheduleModalGarage, dayDate, dayDate)}
+							{@const nextDayDate = getOffsetDate(i + 1)}
+							{@const isDayBooked = isGarageBookedOnSelectedRange(scheduleModalGarage, dayDate, nextDayDate)}
 							<div class="p-2 rounded-lg border text-[10px] {isDayBooked ? 'bg-rose-50 border-rose-200 text-rose-700' : 'bg-[#EFF3ED] border-[#C2CCBC] text-[#2E382A]'}">
 								<div class="font-bold">{i === 0 ? 'Hari Ini' : `+${i}h`}</div>
 								<div class="font-mono text-[9px] mt-0.5">{dayDate.split('-')[2]}/{dayDate.split('-')[1]}</div>
