@@ -34,6 +34,7 @@ CREATE TABLE IF NOT EXISTS garages (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     code TEXT NOT NULL UNIQUE,
     type TEXT NOT NULL CHECK(type IN ('sepeda', 'mobil', 'mobil_listrik')),
+    car_type TEXT DEFAULT 'Standar',
     daily_price REAL NOT NULL CHECK(daily_price > 0),
     electricity_price_kwh REAL DEFAULT 0 CHECK(electricity_price_kwh >= 0),
     status TEXT NOT NULL CHECK(status IN ('available', 'used')),

@@ -17,15 +17,15 @@
 
 	// Interactive calculation based on real market rates
 	let simResult = $derived.by(() => {
-		let dailyRate = 50000;
+		let dailyRate = 650000;
 		let evRatePerKwh = 0;
 
 		if (simVehicleType === 'sepeda') {
-			dailyRate = 10000;
+			dailyRate = 125000;
 		} else if (simVehicleType === 'mobil') {
-			dailyRate = 50000;
+			dailyRate = 650000;
 		} else if (simVehicleType === 'mobil_listrik') {
-			dailyRate = 75000;
+			dailyRate = 750000;
 			evRatePerKwh = 2500;
 		}
 
@@ -186,7 +186,7 @@
 							</div>
 							<div>
 								<div class="font-bold text-xs">Sepeda / Motor</div>
-								<div class="text-[10px] text-[#71856A]">Garasi S (Rp 10k/hr)</div>
+								<div class="text-[10px] text-[#71856A]">Garasi S (Rp 125k/hr)</div>
 							</div>
 						</button>
 
@@ -199,8 +199,8 @@
 								<Icon name="car" size={16} />
 							</div>
 							<div>
-								<div class="font-bold text-xs">Mobil Bensin</div>
-								<div class="text-[10px] text-[#877758]">Garasi C (Rp 50k/hr)</div>
+								<div class="font-bold text-xs">Mobil (City/MPV/SUV)</div>
+								<div class="text-[10px] text-[#877758]">Garasi C (500rb - 1jt)</div>
 							</div>
 						</button>
 
@@ -214,7 +214,7 @@
 							</div>
 							<div>
 								<div class="font-bold text-xs">Mobil Listrik (EV)</div>
-								<div class="text-[10px] text-[#596A53]">Garasi E (Rp 75k + Chg)</div>
+								<div class="text-[10px] text-[#596A53]">Garasi E (750rb - 1jt)</div>
 							</div>
 						</button>
 					</div>
@@ -385,15 +385,15 @@
 					<div class="mt-4 space-y-2 text-xs">
 						<div class="flex justify-between py-1 border-b border-[#F8F5EC]">
 							<span class="text-[#877758]">Tarif Harian:</span>
-							<span class="font-mono font-bold text-[#383123]">Rp 10.000 / hari</span>
+							<span class="font-mono font-bold text-[#383123]">Rp 125.000 / hari</span>
 						</div>
 						<div class="flex justify-between py-1 border-b border-[#F8F5EC]">
 							<span class="text-[#877758]">Tarif Bulanan:</span>
-							<span class="font-mono font-bold text-[#71856A]">Rp 250.000 / bulan</span>
+							<span class="font-mono font-bold text-[#71856A]">Rp 3.125.000 / bulan</span>
 						</div>
 						<div class="flex justify-between py-1">
 							<span class="text-[#877758]">Ketentuan Plat:</span>
-							<span class="text-[#4F4532]">Opsional (tidak wajib sepeda)</span>
+							<span class="text-[#4F4532]">Opsional (sepeda gowes) / Wajib plat (motor)</span>
 						</div>
 					</div>
 				</div>
@@ -414,7 +414,7 @@
 							</div>
 							<div>
 								<span class="font-bold text-sm text-[#383123] block leading-tight">Garasi Mobil</span>
-								<span class="text-[10px] text-[#A08F6E]">Bensin, Diesel, atau EV</span>
+								<span class="text-[10px] text-[#A08F6E]">City Car, MPV, SUV, Sedan</span>
 							</div>
 						</div>
 						<span class="font-mono text-xs font-bold text-[#877758] bg-[#FAF8F4] px-2.5 py-1 rounded-md border border-[#DFD5C2]">
@@ -423,17 +423,17 @@
 					</div>
 
 					<p class="text-xs text-[#6B5E45] mt-3 leading-relaxed">
-						Peruntukan kendaraan roda empat standar (sedan, SUV, MPV) berbahan bakar fosil maupun mobil listrik yang hanya membutuhkan tempat parkir aman tanpa fasilitas pengisian daya.
+						Peruntukan kendaraan roda empat standar (City Car, MPV, SUV, Sedan) berbahan bakar bensin/diesel atau EV tanpa charging.
 					</p>
 
 					<div class="mt-4 space-y-2 text-xs">
 						<div class="flex justify-between py-1 border-b border-[#F8F5EC]">
 							<span class="text-[#877758]">Tarif Harian:</span>
-							<span class="font-mono font-bold text-[#383123]">Rp 50.000 / hari</span>
+							<span class="font-mono font-bold text-[#383123]">Rp 500.000 - Rp 1.000.000</span>
 						</div>
 						<div class="flex justify-between py-1 border-b border-[#F8F5EC]">
 							<span class="text-[#877758]">Tarif Bulanan:</span>
-							<span class="font-mono font-bold text-[#71856A]">Rp 1.250.000 / bulan</span>
+							<span class="font-mono font-bold text-[#71856A]">Mulai Rp 12.500.000 / bulan</span>
 						</div>
 						<div class="flex justify-between py-1">
 							<span class="text-[#877758]">Ketentuan Plat:</span>

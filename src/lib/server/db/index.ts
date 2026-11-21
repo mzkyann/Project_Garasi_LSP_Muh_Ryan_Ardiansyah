@@ -40,6 +40,7 @@ export function initDb() {
 				id INTEGER PRIMARY KEY AUTOINCREMENT,
 				code TEXT NOT NULL UNIQUE,
 				type TEXT NOT NULL CHECK(type IN ('sepeda', 'mobil', 'mobil_listrik')),
+				car_type TEXT DEFAULT 'Standar',
 				daily_price REAL NOT NULL CHECK(daily_price > 0),
 				electricity_price_kwh REAL DEFAULT 0 CHECK(electricity_price_kwh >= 0),
 				status TEXT NOT NULL CHECK(status IN ('available', 'used')),
@@ -79,6 +80,13 @@ export function initDb() {
 		`);
 	}
 
+	// Migrasi aman untuk menambahkan car_type jika tabel sudah ada sebelumnya
+	try {
+		db.exec(`ALTER TABLE garages ADD COLUMN car_type TEXT DEFAULT 'Standar';`);
+	} catch (e) {
+		// Kolom car_type sudah ada
+	}
+
 	seedInitialData();
 }
 
@@ -115,25 +123,25 @@ export function seedInitialData(force = false) {
 	const garageCount = db.prepare('SELECT COUNT(*) as count FROM garages').get() as { count: number };
 	if (garageCount.count === 0) {
 		const insertGarage = db.prepare(`
-			INSERT INTO garages (code, type, daily_price, electricity_price_kwh, status, created_at)
-			VALUES (?, ?, ?, ?, ?, ?)
+			INSERT INTO garages (code, type, car_type, daily_price, electricity_price_kwh, status, created_at)
+			VALUES (?, ?, ?, ?, ?, ?, ?)
 		`);
 
-		// Garasi Sepeda (Kode S...)
-		insertGarage.run('S001', 'sepeda', 10000, 0, 'used', now);
-		insertGarage.run('S002', 'sepeda', 10000, 0, 'available', now);
-		insertGarage.run('S003', 'sepeda', 12000, 0, 'available', now);
+		// Garasi Sepeda & Motor (Kode S...) - Tarif Sepeda Motor: 125rb per hari
+		insertGarage.run('S001', 'sepeda', 'Sepeda Motor Matic / Bebek (Vario, Beat)', 125000, 0, 'used', now);
+		insertGarage.run('S002', 'sepeda', 'Sepeda Motor Sport / Maxi (NMax, PCX, CBR)', 125000, 0, 'available', now);
+		insertGarage.run('S003', 'sepeda', 'Sepeda Motor Trail / Gowes (CRF, Polygon)', 125000, 0, 'available', now);
 
-		// Garasi Mobil (Kode C...)
-		insertGarage.run('C001', 'mobil', 50000, 0, 'used', now);
-		insertGarage.run('C002', 'mobil', 50000, 0, 'used', now);
-		insertGarage.run('C003', 'mobil', 60000, 0, 'available', now);
-		insertGarage.run('C004', 'mobil', 60000, 0, 'available', now);
+		// Garasi Mobil (Kode C...) - Tarif Mobil: 500rb s/d 1jt per hari
+		insertGarage.run('C001', 'mobil', 'City Car / Hatchback (Honda Brio, Toyota Yaris)', 500000, 0, 'used', now);
+		insertGarage.run('C002', 'mobil', 'MPV Keluarga (Toyota Avanza, Mitsubishi Xpander)', 650000, 0, 'used', now);
+		insertGarage.run('C003', 'mobil', 'Medium SUV / Crossover (Honda HR-V, Hyundai Creta)', 750000, 0, 'available', now);
+		insertGarage.run('C004', 'mobil', 'Executive Sedan / Luxury SUV (Toyota Camry, Fortuner)', 1000000, 0, 'available', now);
 
-		// Garasi Mobil Listrik (Kode E...)
-		insertGarage.run('E001', 'mobil_listrik', 75000, 2500, 'used', now);
-		insertGarage.run('E002', 'mobil_listrik', 75000, 2500, 'available', now);
-		insertGarage.run('E003', 'mobil_listrik', 85000, 2500, 'available', now);
+		// Garasi Mobil Listrik (Kode E...) - Dilengkapi SPKLU AC Wallbox
+		insertGarage.run('E001', 'mobil_listrik', 'Crossover EV (Hyundai Ioniq 5, Kona EV)', 750000, 2500, 'used', now);
+		insertGarage.run('E002', 'mobil_listrik', 'Performance EV Sedan (BYD Seal Performance)', 850000, 2500, 'available', now);
+		insertGarage.run('E003', 'mobil_listrik', 'Flagship Luxury EV (Kia EV9, BMW iX)', 1000000, 2500, 'available', now);
 
 		// Ambil User Budi & Garasi-garasi untuk membuat transaksi sampel
 		const budiUser = db.prepare('SELECT id FROM users WHERE email = ?').get('budi@gmail.com') as { id: number };
@@ -153,7 +161,7 @@ export function seedInitialData(force = false) {
 				) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
 			`);
 
-			// Rental 1: Mobil Bensin di C001 (5 hari)
+			// Rental 1: Mobil Bensin di C001 (5 hari x 500.000 = 2.500.000)
 			const endC001 = new Date();
 			endC001.setDate(endC001.getDate() + 5);
 			const r1Result = insertRental.run(
@@ -161,21 +169,21 @@ export function seedInitialData(force = false) {
 				c001.id,
 				'mobil',
 				'L 1234 AB',
-				'Toyota Avanza 2023',
+				'Toyota Avanza 1.5G 2024',
 				0,
 				'harian',
 				5,
 				today,
 				endC001.toISOString().split('T')[0],
-				250000,
+				2500000,
 				0,
-				250000,
+				2500000,
 				paymentProofSvg,
 				'active',
 				now
 			);
 
-			// Rental 2: Mobil Listrik di E001 (3 hari, 60 kWh charge penuh)
+			// Rental 2: Mobil Listrik di E001 (3 hari x 750.000 = 2.250.000 + 60 kWh x 2500 = 150.000 => 2.400.000)
 			const endE001 = new Date();
 			endE001.setDate(endE001.getDate() + 3);
 			insertRental.run(
@@ -183,43 +191,43 @@ export function seedInitialData(force = false) {
 				e001.id,
 				'mobil_listrik',
 				'B 5678 EV',
-				'Hyundai Ioniq 5',
+				'Hyundai Ioniq 5 Signature',
 				60,
 				'harian',
 				3,
 				today,
 				endE001.toISOString().split('T')[0],
-				225000,
+				2250000,
 				150000, // 60 kWh * 2500
-				375000,
+				2400000,
 				paymentProofSvg,
 				'active',
 				now
 			);
 
-			// Rental 3: Sepeda di S001 (Bulanan: 1 bulan = 25 x 10.000 = 250.000)
+			// Rental 3: Sepeda Motor di S001 (Bulanan: 1 bulan = 25 x 125.000 = 3.125.000)
 			const endS001 = new Date();
 			endS001.setMonth(endS001.getMonth() + 1);
 			insertRental.run(
 				budiUser.id,
 				s001.id,
-				'sepeda',
-				null,
-				'Polygon Cascade 4',
+				'sepeda_motor',
+				'L 9876 XYZ',
+				'Honda Vario 160 ABS',
 				0,
 				'bulanan',
 				1,
 				today,
 				endS001.toISOString().split('T')[0],
-				250000,
+				3125000,
 				0,
-				250000,
+				3125000,
 				paymentProofSvg,
 				'active',
 				now
 			);
 
-			// Rental 4: Mobil di C002 (7 hari)
+			// Rental 4: Mobil di C002 (7 hari x 650.000 = 4.550.000)
 			const endC002 = new Date();
 			endC002.setDate(endC002.getDate() + 7);
 			insertRental.run(
@@ -227,25 +235,25 @@ export function seedInitialData(force = false) {
 				c002.id,
 				'mobil',
 				'N 9999 CD',
-				'Honda Civic RS Turbo',
+				'Mitsubishi Xpander Ultimate',
 				0,
 				'harian',
 				7,
 				today,
 				endC002.toISOString().split('T')[0],
-				350000,
+				4550000,
 				0,
-				350000,
+				4550000,
 				paymentProofSvg,
 				'active',
 				now
 			);
 
-			// Tambahkan 1 riwayat perpanjangan pada Rental 1
+			// Tambahkan 1 riwayat perpanjangan pada Rental 1 (2 hari x 500.000 = 1.000.000)
 			const rental1Id = Number(r1Result.lastInsertRowid);
 			if (rental1Id) {
 				const extEnd = new Date(endC001);
-				extEnd.setDate(extEnd.getDate() + 3);
+				extEnd.setDate(extEnd.getDate() + 2);
 
 				db.prepare(`
 					INSERT INTO rental_extensions (
@@ -255,8 +263,8 @@ export function seedInitialData(force = false) {
 					rental1Id,
 					endC001.toISOString().split('T')[0],
 					extEnd.toISOString().split('T')[0],
-					3,
-					150000, // 3 * 50.000
+					2,
+					1000000, // 2 * 500.000
 					paymentProofSvg,
 					now
 				);

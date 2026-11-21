@@ -459,6 +459,12 @@
 									</span>
 								</div>
 
+								{#if garage.car_type}
+									<div class="mt-2 text-[11px] font-sans font-semibold text-[#4F4532]">
+										{garage.car_type}
+									</div>
+								{/if}
+
 								<div class="mt-4 text-xs space-y-1.5 text-[#6B5E45] border-t border-[#EAE3D4] pt-3 font-mono">
 									<div class="flex justify-between">
 										<span class="text-[#877758] font-sans">Tarif Harian:</span>
