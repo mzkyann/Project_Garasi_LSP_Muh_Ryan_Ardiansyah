@@ -7,8 +7,8 @@
 - **Nomor Skema:** IMT.01.15/SSK/LSP/IX/2021
 - **Nama Asesor:** Citra Lestari
 - **Tanggal Pelaksanaan:** 22 November 2026
-- **Jenis Aplikasi:** Aplikasi Web Full-Stack dengan Basis Data Relasional Terstruktur (ACID)
-- **Repositori GitHub:** https://github.com/mzkyann/Project_Garasi_LSP_Muh_Ryan_Ardiansyah
+- **Jenis Aplikasi:** Aplikasi Web Full-Stack dengan Basis Data Relasional Terstruktur (SQLite ACID / Bun & Node.js)
+- **Tautan Repositori GitHub:** https://github.com/mzkyann/Project_Garasi_LSP_Muh_Ryan_Ardiansyah
 
 ---
 
@@ -177,11 +177,11 @@ Dalam pemenuhan unit kompetensi **J.620100.019.02 (Menggunakan Library atau Komp
 |:---:|---|:---:|:---:|---|
 | 1 | **SvelteKit** | `^3.2.0` | MIT | Framework full-stack modern dengan kompilasi reaktif (*Svelte 5 Runes*). Menangani perutean berbasis file (`+page.svelte`), aksi form server-side (`+page.server.ts`), dan server-side rendering (SSR) berkecepatan tinggi dalam satu arsitektur terpadu. |
 | 2 | **Svelte Core** | `^5.57.3` | MIT | Engine antarmuka reaktif tanpa *virtual DOM overhead*, memastikan performa kalkulasi biaya real-time dan interaksi antarmuka berjalan sangat mulus. |
-| 3 | **TypeScript** | `^6.0.3` | Apache-2.0 | Menjamin *type safety* pada seluruh entitas model domain, kontrak request/response, dan mencegah bug runtime pada kalkulasi durasi serta tarif sewa. |
+| 3 | **TypeScript & Bun** | `^6.0.3` / `1.4.0` | Apache-2.0 / MIT | TypeScript digunakan agar tipe data lebih terjaga dan mengurangi error saat penulisan kode, sedangkan Bun (v1.4.0) dipakai sebagai runtime modern berkecepatan tinggi sekaligus package manager utama proyek. |
 | 4 | **Tailwind CSS v4** | `^4.3.5` | MIT | Framework CSS modern utilitas generasi terbaru berbasis engine performa tinggi, mempermudah pembuatan antarmuka responsif elegan dengan palet warna resmi Skandinavia (*Warm Olive Bronze*, *Sage Green*, *Cream Linen*, *Sand Khaki*). |
-| 5 | **node:sqlite (DatabaseSync)** | Bawaan Node.js 22 | MIT | Driver engine basis data relasional SQLite resmi bawaan Node.js runtime. Memproses query SQL transaksional ACID, integritas *Foreign Keys*, dan migrasi skema tabel tanpa dependensi binary eksternal yang rumit. |
+| 5 | **node:sqlite (DatabaseSync)** | Terintegrasi | MIT | Driver engine basis data relasional SQLite resmi untuk memproses query SQL transaksional ACID, integritas *Foreign Keys*, dan migrasi skema tabel tanpa dependensi binary eksternal yang rumit. |
 | 6 | **Lucide Icons (`@lucide/svelte`)** | `^1.77.0` | ISC | Kumpulan ikon vektor SVG modern yang ringan dan konsisten untuk memperjelas navigasi visual (ikon mobil, sepeda motor, garasi, SPKLU, status verifikasi, dan laporan). |
-| 7 | **Vitest** | `^5.1.0` | MIT | Framework pengujian unit (*Unit Testing*) berkecepatan tinggi berbasis Vite runner, digunakan untuk menguji validasi batas input, kompatibilitas kendaraan, formula tarif, dan aturan perpanjangan sewa. |
+| 7 | **Vitest** | `^5.1.0` | MIT | Framework pengujian unit (*Unit Testing*) berkecepatan tinggi berbasis Vite runner, dijalankan langsung melalui Bun untuk menguji validasi batas input, kompatibilitas kendaraan, formula tarif, dan aturan perpanjangan sewa. |
 
 ---
 
@@ -329,7 +329,7 @@ Kode program aplikasi GARASI TA bersifat *open-source* dan dapat diakses secara 
 
 ### 8.1 Panduan Menjalankan Aplikasi di Lingkungan Lokal:
 1. **Prasyarat Lingkungan:**
-   - Node.js versi 20+ (Direkomendasikan Node.js 22 LTS).
+   - Bun runtime versi 1.4.0+ (atau Node.js versi 20+).
    - Git CLI.
 2. **Kloning Repositori:**
    ```bash
@@ -338,20 +338,21 @@ Kode program aplikasi GARASI TA bersifat *open-source* dan dapat diakses secara 
    ```
 3. **Instalasi Dependensi:**
    ```bash
-   npm install
+   bun install
    ```
 4. **Menjalankan Pengujian Unit Otomatis (Vitest):**
    ```bash
-   npm run test
+   bun run test
    ```
+   *(atau perintah: `bunx vitest run`)*
 5. **Menjalankan Server Pengembangan (Dev Server):**
    ```bash
-   npm run dev
+   bun run dev
    ```
    Buka peramban pada alamat lokal: `http://localhost:5173`.
 6. **Mereset Basis Data ke Kondisi Awal (Opsional):**
    ```bash
-   npm run db:reset
+   bun run db:reset
    ```
 
 ### 8.2 Daftar Akun Demo Pengujian untuk Asesor:

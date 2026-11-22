@@ -378,10 +378,10 @@ const doc = new Document({
 						}),
 						new TableRow({
 							children: [
-								createTableCell('TypeScript', false, 25),
-								createTableCell('^6.0.3', false, 15),
-								createTableCell('Apache-2.0', false, 15),
-								createTableCell('Type safety untuk menjaga keakuratan tipe data dan mencegah runtime error.', false, 45)
+								createTableCell('TypeScript & Bun', false, 25),
+								createTableCell('^6.0.3 / 1.4.0', false, 15),
+								createTableCell('Apache-2.0 / MIT', false, 15),
+								createTableCell('TypeScript untuk type safety, sedangkan Bun (v1.4.0) digunakan sebagai runtime berkecepatan tinggi dan package manager utama.', false, 45)
 							]
 						})
 					]
@@ -588,10 +588,10 @@ const doc = new Document({
 				createParagraph('https://github.com/mzkyann/Project_Garasi_LSP_Muh_Ryan_Ardiansyah', true),
 
 				createHeading2('Panduan Menjalankan di Lokal:'),
-				createBullet('Instal dependensi proyek: npm install'),
-				createBullet('Jalankan unit testing otomatis: npm run test'),
-				createBullet('Jalankan server aplikasi: npm run dev, lalu buka http://localhost:5173 di browser.'),
-				createBullet('Reset database ke kondisi awal (opsional): npm run db:reset'),
+				createBullet('Instal dependensi proyek: bun install'),
+				createBullet('Jalankan unit testing otomatis: bun run test (atau: bunx vitest run)'),
+				createBullet('Jalankan server aplikasi: bun run dev, lalu buka http://localhost:5173 di browser.'),
+				createBullet('Reset database ke kondisi awal (opsional): bun run db:reset'),
 
 				createHeading2('Daftar Akun Demo Pengujian:'),
 				createBullet('admin@garasi.id / admin123 (NIK: 1234567890123456, Status: Approved)', 'Administrator:'),
@@ -612,3 +612,4 @@ async function main() {
 }
 
 main().catch(console.error);
+
